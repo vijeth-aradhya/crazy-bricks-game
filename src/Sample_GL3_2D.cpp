@@ -401,7 +401,7 @@ void draw ()
   glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
 
   // draw3DObject draws the VAO given to it using current MVP matrix
-  draw3DObject(triangle);
+//  draw3DObject(triangle);
 
   // Pop matrix to undo transformations till last push matrix instead of recomputing model matrix
   // glPopMatrix ();
@@ -478,7 +478,7 @@ void initGL (GLFWwindow* window, int width, int height)
 {
     /* Objects should be created before any other gl function and shaders */
 	// Create the models
-	createTriangle (); // Generate the VAO, VBOs, vertices data & copy into the array buffer
+//	createTriangle (); // Generate the VAO, VBOs, vertices data & copy into the array buffer
 	createRectangle ();
 	
 	// Create and compile our GLSL program from the shaders
