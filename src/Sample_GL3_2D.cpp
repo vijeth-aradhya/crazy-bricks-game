@@ -337,13 +337,13 @@ void createRectangle ()
   };
 
   static const GLfloat color_buffer_data [] = {
-    1,0,0, // color 1
+    0,0,1, // color 1
     0,0,1, // color 2
-    0,1,0, // color 3
+    0,0,1, // color 3
 
-    0,1,0, // color 3
-    0.3,0.3,0.3, // color 4
-    1,0,0  // color 1
+    0,0,1, // color 3
+    0,0,1, // color 4
+    0,0,1  // color 1
   };
 
   // create3DObject creates and returns a handle to a VAO that can be used later
