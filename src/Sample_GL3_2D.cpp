@@ -298,7 +298,13 @@ void reshapeWindow (GLFWwindow* window, int width, int height)
     Matrices.projection = glm::ortho(-4.0f, 4.0f, -4.0f, 4.0f, 0.1f, 500.0f);
 }
 
-VAO *triangle, *rectangle;
+VAO *triangle, *rectangle[10];
+
+float randomFloat(float min, float max)
+{
+  float r = (float)rand() / (float)RAND_MAX;
+  return min + r * (max - min);
+}
 
 // Creates the triangle object used in this sample code
 void createTriangle ()
@@ -323,17 +329,20 @@ void createTriangle ()
 }
 
 // Creates the rectangle object used in this sample code
-void createRectangle ()
+void createRectangle (float x_shift, float y_shift, int rect_num)
 {
+
+  float x_coord=0.08, y_coord=0.15;
+
   // GL3 accepts only Triangles. Quads are not supported
   static const GLfloat vertex_buffer_data [] = {
-    -1.2,-1,0, // vertex 1
-    1.2,-1,0, // vertex 2
-    1.2, 1,0, // vertex 3
+    -x_coord+x_shift,-y_coord+y_shift,0, // vertex 1
+    -x_coord+x_shift,y_coord+y_shift,0, // vertex 2
+    x_coord+x_shift,y_coord+y_shift,0, // vertex 3
 
-    1.2, 1,0, // vertex 3
-    -1.2, 1,0, // vertex 4
-    -1.2,-1,0  // vertex 1
+    x_coord+x_shift,y_coord+y_shift,0, // vertex 3
+    x_coord+x_shift,-y_coord+y_shift,0, // vertex 4
+    -x_coord+x_shift,-y_coord+y_shift,0  // vertex 1
   };
 
   static const GLfloat color_buffer_data [] = {
@@ -347,12 +356,13 @@ void createRectangle ()
   };
 
   // create3DObject creates and returns a handle to a VAO that can be used later
-  rectangle = create3DObject(GL_TRIANGLES, 6, vertex_buffer_data, color_buffer_data, GL_FILL);
+  rectangle[rect_num] = create3DObject(GL_TRIANGLES, 6, vertex_buffer_data, color_buffer_data, GL_FILL);
 }
 
 float camera_rotation_angle = 90;
 float rectangle_rotation = 0;
 float triangle_rotation = 0;
+float fall_down_speed = 0;
 
 /* Render the scene with openGL */
 /* Edit this function according to your assignment */
@@ -386,10 +396,10 @@ void draw ()
   //  Don't change unless you are sure!!
   glm::mat4 MVP;	// MVP = Projection * View * Model
 
+/*
+  // Render the scence
   // Load identity to model matrix
   Matrices.model = glm::mat4(1.0f);
-
-  /* Render your scene */
 
   glm::mat4 translateTriangle = glm::translate (glm::vec3(-2.0f, 0.0f, 0.0f)); // glTranslatef
   glm::mat4 rotateTriangle = glm::rotate((float)(triangle_rotation*M_PI/180.0f), glm::vec3(0,0,1));  // rotate about vector (1,0,0)
@@ -401,25 +411,29 @@ void draw ()
   glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
 
   // draw3DObject draws the VAO given to it using current MVP matrix
-//  draw3DObject(triangle);
+  draw3DObject(triangle);
+*/
 
   // Pop matrix to undo transformations till last push matrix instead of recomputing model matrix
   // glPopMatrix ();
   Matrices.model = glm::mat4(1.0f);
 
-  glm::mat4 translateRectangle = glm::translate (glm::vec3(2, 0, 0));        // glTranslatef
+  glm::mat4 translateRectangle = glm::translate (glm::vec3(0, fall_down_speed, 0));        // glTranslatef
   glm::mat4 rotateRectangle = glm::rotate((float)(rectangle_rotation*M_PI/180.0f), glm::vec3(0,0,1)); // rotate about vector (-1,1,1)
   Matrices.model *= (translateRectangle * rotateRectangle);
   MVP = VP * Matrices.model;
   glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
 
   // draw3DObject draws the VAO given to it using current MVP matrix
-  draw3DObject(rectangle);
+  draw3DObject(rectangle[0]);
+  draw3DObject(rectangle[1]);
+  draw3DObject(rectangle[2]);
 
   // Increment angles
   float increments = 1;
 
   //camera_rotation_angle++; // Simulating camera rotation
+  fall_down_speed += -0.005;
   triangle_rotation = triangle_rotation + increments*triangle_rot_dir*triangle_rot_status;
   rectangle_rotation = rectangle_rotation + increments*rectangle_rot_dir*rectangle_rot_status;
 }
@@ -479,7 +493,9 @@ void initGL (GLFWwindow* window, int width, int height)
     /* Objects should be created before any other gl function and shaders */
 	// Create the models
 //	createTriangle (); // Generate the VAO, VBOs, vertices data & copy into the array buffer
-	createRectangle ();
+	createRectangle (randomFloat(-1.0, -1.3), 3.5, 0);
+  createRectangle (randomFloat(-1.3, -1.6), 3.5, 1);
+  createRectangle (randomFloat(-1.6, -1.9), 3.5, 2);
 	
 	// Create and compile our GLSL program from the shaders
 	programID = LoadShaders( "Sample_GL.vert", "Sample_GL.frag" );
@@ -490,7 +506,7 @@ void initGL (GLFWwindow* window, int width, int height)
 	reshapeWindow (window, width, height);
 
     // Background color of the scene
-	glClearColor (0.3f, 0.3f, 0.3f, 0.0f); // R, G, B, A
+	glClearColor (1.0f, 1.0f, 1.0f, 0.0f); // R, G, B, A
 	glClearDepth (1.0f);
 
 	glEnable (GL_DEPTH_TEST);
@@ -504,7 +520,7 @@ void initGL (GLFWwindow* window, int width, int height)
 
 int main (int argc, char** argv)
 {
-	int width = 600;
+	int width = 1000;
 	int height = 600;
 
     GLFWwindow* window = initGLFW(width, height);
@@ -527,7 +543,7 @@ int main (int argc, char** argv)
 
         // Control based on time (Time based transformation like 5 degrees rotation every 0.5s)
         current_time = glfwGetTime(); // Time in seconds
-        if ((current_time - last_update_time) >= 0.5) { // atleast 0.5s elapsed since last frame
+        if ((current_time - last_update_time) >= 1.0) { // atleast 0.5s elapsed since last frame
             // do something every 0.5 seconds ..
             last_update_time = current_time;
         }
