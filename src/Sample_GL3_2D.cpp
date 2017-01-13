@@ -205,8 +205,8 @@ void draw3DObject (struct VAO* vao)
 
 float triangle_rot_dir = 1;
 float rectangle_rot_dir = 1;
-bool triangle_rot_status = true;
-bool rectangle_rot_status = true;
+bool triangle_rot_status = false;
+bool rectangle_rot_status = false;
 
 /* Executed when a regular key is pressed/released/held-down */
 /* Prefered for Keyboard events */
