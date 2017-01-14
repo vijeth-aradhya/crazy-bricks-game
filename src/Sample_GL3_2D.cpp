@@ -249,15 +249,20 @@ class Basket {
    public:
       float x;
       float y;
+      float x_shift;
+      float width;
+      float length;
       string color;
       VAO *basketObj;
 
       void moveLeft() {
         this->x+=-0.4;
+        this->x_shift+=-0.4;
       }
 
       void moveRight() {
         this->x+=0.4;
+        this->x_shift+=0.4;
       }
 
       void create () {
@@ -294,7 +299,11 @@ class Basket {
           red,green,blue  // color 1
         };
 
-        this->x = x_coord;
+        this->x = x_coord+x_shift;
+        this->y = y_coord+y_shift;
+        this->x_shift = 0;
+        this->length = 2*y_coord;
+        this->width = 2*x_coord;
 
         // create3DObject creates and returns a handle to a VAO that can be used later
         this->basketObj = create3DObject(GL_TRIANGLES, 6, vertex_buffer_data, color_buffer_data, GL_FILL);
@@ -311,10 +320,18 @@ class Brick {
    public:
       float x;
       float y;
+      float y_shift;
+      float length;
+      float width;
+      string color;
       VAO *brickObj;
 
       void moveDown() {
         this->y+=-0.07;
+      }
+
+      void vanish() {
+        this->y_shift+=-30;
       }
 
       void create (float x_shift) {
@@ -325,9 +342,14 @@ class Brick {
         switch(color){
           case 0:
             red=1;
+            this->color="red";
             break; //optional
           case 1:
             green=1;
+            this->color="green";
+            break; //optional
+          case 2:
+            this->color="black";
             break; //optional
         }
 
@@ -351,8 +373,11 @@ class Brick {
           red,green,blue  // color 1
         };
 
-        this->x = x_coord;
-        this->y = y_coord;
+        this->x = x_coord+x_shift;
+        this->y = y_coord+y_shift;
+        this->y_shift = 0;
+        this->length = 2*y_coord;
+        this->width = 2*x_coord;
 
         // create3DObject creates and returns a handle to a VAO that can be used later
         this->brickObj = create3DObject(GL_TRIANGLES, 6, vertex_buffer_data, color_buffer_data, GL_FILL);
@@ -365,24 +390,86 @@ Brick bricks[100];
 
 Basket baskets[2];
 
-int total_bricks;
+std::vector<int> regenerateBrick;
+//myvector.back();
+//myvector.pop_back();
+//myvector.push_back(myint);
+//myvector.size();
+
+int total_bricks, total_score, game_over;
 
 float bricks_speed;
 
-void createBrick() {
+void chooseCol(int brick_num) {
   int col=(rand()%3);
   switch(col){
     case 0:
-      bricks[total_bricks].create(randomFloat(-2.3, -0.3));
+      bricks[brick_num].create(randomFloat(-2.3, -0.3));
       break; //optional
     case 1:
-      bricks[total_bricks].create(randomFloat(0.7, 1.5));
+      bricks[brick_num].create(randomFloat(0.7, 1.5));
       break; //optional
     case 2:
-      bricks[total_bricks].create(randomFloat(3.0, 4.0));
+      bricks[brick_num].create(randomFloat(3.0, 4.0));
       break;
   }
-  total_bricks++;
+}
+
+void createBrick() {
+  if(regenerateBrick.size()!=0){
+    chooseCol(regenerateBrick.back());
+    regenerateBrick.pop_back();
+  }
+  else {
+    chooseCol(total_bricks);
+    total_bricks++;
+  }
+}
+
+void checkBrickYLimit() {
+  int i;
+  for(i=0;i<total_bricks;i++) {
+    if(bricks[i].y<baskets[0].y) {
+      regenerateBrick.push_back(i);
+      bricks[i].vanish();
+    }
+  }
+}
+
+void checkRedBasket() {
+  int i;
+  for(i=0;i<total_bricks;i++) {
+    if(bricks[i].color=="red" || bricks[i].color=="black") {
+      if(bricks[i].y>=baskets[0].y && (bricks[i].y-bricks[i].length)<=baskets[0].y &&
+        (baskets[0].x-baskets[0].width)<=(bricks[i].x-bricks[i].width) && baskets[0].x>=bricks[i].x) {
+        
+        if(bricks[i].color=="black")
+          game_over=1;
+        else{
+          total_score+=10;
+          printf("Caught Red %d\n", i);
+        }
+      }
+    }
+  }
+}
+
+void checkGreenBasket() {
+  int i;
+  for(i=0;i<total_bricks;i++) {
+    if(bricks[i].color=="green" || bricks[i].color=="black") {
+      if(bricks[i].y>=baskets[1].y && (bricks[i].y-bricks[i].length)<=baskets[1].y &&
+        (baskets[1].x-baskets[1].width)<=(bricks[i].x-bricks[i].width) && baskets[1].x>=bricks[i].x) {
+        
+        if(bricks[i].color=="black")
+          game_over=1;
+        else{
+          total_score+=10;
+          printf("Caught Green %d\n", i);
+        }
+      }
+    }
+  }
 }
 
 /**************************
@@ -624,19 +711,20 @@ void draw ()
   // Draw Bricks
   for(i=0;i<total_bricks;i++) {
     Matrices.model = glm::mat4(1.0f);
-    glm::mat4 translateObject = glm::translate (glm::vec3(0, bricks[i].y, 0));        // glTranslatef
+    glm::mat4 translateObject = glm::translate (glm::vec3(0, bricks[i].y_shift, 0));        // glTranslatef
     //glm::mat4 rotateObject = glm::rotate((float)(rectangle_rotation*M_PI/180.0f), glm::vec3(0,0,1)); // rotate about vector (-1,1,1)
     Matrices.model *= (translateObject);
     MVP = VP * Matrices.model;
     glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
-    bricks[i].y-=bricks_speed;
+    bricks[i].y_shift-=bricks_speed;
+    bricks[i].y -= bricks_speed;
     draw3DObject(bricks[i].brickObj);
   }
 
   // Draw Baskets
   for(i=0;i<2;i++) {
     Matrices.model = glm::mat4(1.0f);
-    glm::mat4 translateObject = glm::translate (glm::vec3(baskets[i].x, 0, 0));
+    glm::mat4 translateObject = glm::translate (glm::vec3(baskets[i].x_shift, 0, 0));
     Matrices.model *= (translateObject);
     MVP = VP * Matrices.model;
     glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
@@ -716,6 +804,8 @@ void initGL (GLFWwindow* window, int width, int height)
     /* Objects should be created before any other gl function and shaders */
 	// Create the models
   total_bricks=0;
+  total_score=0;
+  game_over=0;
   bricks_speed=0.005;
   laser.create();
   baskets[0].color="red";
@@ -760,6 +850,10 @@ int main (int argc, char** argv)
 
         // OpenGL Draw commands
         draw();
+
+        checkRedBasket();
+        checkGreenBasket();
+        checkBrickYLimit();
 
         // Swap Frame Buffer in double buffering
         glfwSwapBuffers(window);
