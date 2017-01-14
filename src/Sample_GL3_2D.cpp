@@ -199,6 +199,192 @@ void draw3DObject (struct VAO* vao)
     glDrawArrays(vao->PrimitiveMode, 0, vao->NumVertices); // Starting from vertex 0; 3 vertices total -> 1 triangle
 }
 
+class Laser {
+   public:
+      float x;
+      float y;
+      VAO *laserObj;
+
+      void moveUp() {
+        this->y+=0.07;
+      }
+
+      void moveDown() {
+        this->y+=-0.07;
+      }
+
+      void create () {
+
+        float x_coord=0.3, y_coord=0.2, x_shift=-4, y_shift=0;
+
+        static const GLfloat vertex_buffer_data [] = {
+          -x_coord+x_shift,-y_coord+y_shift,0, // vertex 1
+          -x_coord+x_shift,y_coord+y_shift,0, // vertex 2
+          x_coord+x_shift,y_coord+y_shift,0, // vertex 3
+
+          x_coord+x_shift,y_coord+y_shift,0, // vertex 3
+          x_coord+x_shift,-y_coord+y_shift,0, // vertex 4
+          -x_coord+x_shift,-y_coord+y_shift,0  // vertex 1
+        };
+
+        static const GLfloat color_buffer_data [] = {
+          0,0,0, // color 1
+          0,0,0, // color 2
+          0,0,0, // color 3
+
+          0,0,0, // color 3
+          0,0,0, // color 4
+          0,0,0  // color 1
+        };
+
+        this->x = x_coord;
+        this->y = y_coord;
+
+        // create3DObject creates and returns a handle to a VAO that can be used later
+        this->laserObj = create3DObject(GL_TRIANGLES, 6, vertex_buffer_data, color_buffer_data, GL_FILL);
+      }
+};
+
+class Basket {
+   public:
+      float x;
+      float y;
+      string color;
+      VAO *basketObj;
+
+      void moveLeft() {
+        this->x+=-0.4;
+      }
+
+      void moveRight() {
+        this->x+=0.4;
+      }
+
+      void create () {
+
+        float x_coord=0.6, y_coord=0.6, x_shift, y_shift=-3.4;
+        int red=0, green=0, blue=0;
+
+        if(this->color == "red") {
+          red=1;
+          x_shift=-1.0;
+        }
+        else {
+          green=1;
+          x_shift=1.0;
+        }
+
+        GLfloat vertex_buffer_data [] = {
+          -x_coord+x_shift,-y_coord+y_shift,0, // vertex 1
+          -x_coord+x_shift,y_coord+y_shift,0, // vertex 2
+          x_coord+x_shift,y_coord+y_shift,0, // vertex 3
+
+          x_coord+x_shift,y_coord+y_shift,0, // vertex 3
+          x_coord+x_shift,-y_coord+y_shift,0, // vertex 4
+          -x_coord+x_shift,-y_coord+y_shift,0  // vertex 1
+        };
+
+        GLfloat color_buffer_data [] = {
+          red,green,blue, // color 1
+          red,green,blue, // color 2
+          red,green,blue, // color 3
+
+          red,green,blue, // color 3
+          red,green,blue, // color 4
+          red,green,blue  // color 1
+        };
+
+        this->x = x_coord;
+
+        // create3DObject creates and returns a handle to a VAO that can be used later
+        this->basketObj = create3DObject(GL_TRIANGLES, 6, vertex_buffer_data, color_buffer_data, GL_FILL);
+      }
+};
+
+float randomFloat(float min, float max)
+{
+  float r = (float)rand() / (float)RAND_MAX;
+  return min + r * (max - min);
+}
+
+class Brick {
+   public:
+      float x;
+      float y;
+      VAO *brickObj;
+
+      void moveDown() {
+        this->y+=-0.07;
+      }
+
+      void create (float x_shift) {
+
+        float x_coord=0.08, y_coord=0.15, y_shift=3.5;
+
+        int color=(rand()%3), red=0, green=0, blue=0;
+        switch(color){
+          case 0:
+            red=1;
+            break; //optional
+          case 1:
+            green=1;
+            break; //optional
+        }
+
+        GLfloat vertex_buffer_data [] = {
+          -x_coord+x_shift,-y_coord+y_shift,0, // vertex 1
+          -x_coord+x_shift,y_coord+y_shift,0, // vertex 2
+          x_coord+x_shift,y_coord+y_shift,0, // vertex 3
+
+          x_coord+x_shift,y_coord+y_shift,0, // vertex 3
+          x_coord+x_shift,-y_coord+y_shift,0, // vertex 4
+          -x_coord+x_shift,-y_coord+y_shift,0  // vertex 1
+        };
+
+        GLfloat color_buffer_data [] = {
+          red,green,blue, // color 1
+          red,green,blue, // color 2
+          red,green,blue, // color 3
+
+          red,green,blue, // color 3
+          red,green,blue, // color 4
+          red,green,blue  // color 1
+        };
+
+        this->x = x_coord;
+        this->y = y_coord;
+
+        // create3DObject creates and returns a handle to a VAO that can be used later
+        this->brickObj = create3DObject(GL_TRIANGLES, 6, vertex_buffer_data, color_buffer_data, GL_FILL);
+      }
+};
+
+Laser laser;
+
+Brick bricks[100];
+
+Basket baskets[2];
+
+int total_bricks;
+
+float bricks_speed;
+
+void createBrick() {
+  int col=(rand()%3);
+  switch(col){
+    case 0:
+      bricks[total_bricks].create(randomFloat(-2.3, -0.3));
+      break; //optional
+    case 1:
+      bricks[total_bricks].create(randomFloat(0.7, 1.5));
+      break; //optional
+    case 2:
+      bricks[total_bricks].create(randomFloat(3.0, 4.0));
+      break;
+  }
+  total_bricks++;
+}
+
 /**************************
  * Customizable functions *
  **************************/
@@ -222,8 +408,31 @@ void keyboard (GLFWwindow* window, int key, int scancode, int action, int mods)
             case GLFW_KEY_P:
                 triangle_rot_status = !triangle_rot_status;
                 break;
-            case GLFW_KEY_X:
-                // do something ..
+            case GLFW_KEY_S:
+                laser.moveUp();
+                break;
+            case GLFW_KEY_F:
+                laser.moveDown();
+                break;
+            case GLFW_KEY_G:
+                baskets[0].moveLeft();
+                break;
+            case GLFW_KEY_H:
+                baskets[0].moveRight();
+                break;
+            case GLFW_KEY_R:
+                baskets[1].moveLeft();
+                break;
+            case GLFW_KEY_T:
+                baskets[1].moveRight();
+                break;
+            case GLFW_KEY_N:
+                if(bricks_speed<=0.02)
+                  bricks_speed+=0.001;
+                break;
+            case GLFW_KEY_M:
+                if(bricks_speed>=0.003)
+                  bricks_speed+=-0.001;
                 break;
             default:
                 break;
@@ -298,13 +507,7 @@ void reshapeWindow (GLFWwindow* window, int width, int height)
     Matrices.projection = glm::ortho(-4.0f, 4.0f, -4.0f, 4.0f, 0.1f, 500.0f);
 }
 
-VAO *triangle, *rectangle[10];
-
-float randomFloat(float min, float max)
-{
-  float r = (float)rand() / (float)RAND_MAX;
-  return min + r * (max - min);
-}
+VAO *triangle, *rectangle;
 
 // Creates the triangle object used in this sample code
 void createTriangle ()
@@ -356,7 +559,7 @@ void createRectangle (float x_shift, float y_shift, int rect_num)
   };
 
   // create3DObject creates and returns a handle to a VAO that can be used later
-  rectangle[rect_num] = create3DObject(GL_TRIANGLES, 6, vertex_buffer_data, color_buffer_data, GL_FILL);
+  rectangle = create3DObject(GL_TRIANGLES, 6, vertex_buffer_data, color_buffer_data, GL_FILL);
 }
 
 float camera_rotation_angle = 90;
@@ -416,25 +619,45 @@ void draw ()
 
   // Pop matrix to undo transformations till last push matrix instead of recomputing model matrix
   // glPopMatrix ();
-  Matrices.model = glm::mat4(1.0f);
+  int i;
 
-  glm::mat4 translateRectangle = glm::translate (glm::vec3(0, fall_down_speed, 0));        // glTranslatef
-  glm::mat4 rotateRectangle = glm::rotate((float)(rectangle_rotation*M_PI/180.0f), glm::vec3(0,0,1)); // rotate about vector (-1,1,1)
-  Matrices.model *= (translateRectangle * rotateRectangle);
-  MVP = VP * Matrices.model;
-  glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
+  // Draw Bricks
+  for(i=0;i<total_bricks;i++) {
+    Matrices.model = glm::mat4(1.0f);
+    glm::mat4 translateObject = glm::translate (glm::vec3(0, bricks[i].y, 0));        // glTranslatef
+    //glm::mat4 rotateObject = glm::rotate((float)(rectangle_rotation*M_PI/180.0f), glm::vec3(0,0,1)); // rotate about vector (-1,1,1)
+    Matrices.model *= (translateObject);
+    MVP = VP * Matrices.model;
+    glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
+    bricks[i].y-=bricks_speed;
+    draw3DObject(bricks[i].brickObj);
+  }
+
+  // Draw Baskets
+  for(i=0;i<2;i++) {
+    Matrices.model = glm::mat4(1.0f);
+    glm::mat4 translateObject = glm::translate (glm::vec3(baskets[i].x, 0, 0));
+    Matrices.model *= (translateObject);
+    MVP = VP * Matrices.model;
+    glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
+    draw3DObject(baskets[i].basketObj);
+  }
 
   // draw3DObject draws the VAO given to it using current MVP matrix
-  draw3DObject(rectangle[0]);
-  draw3DObject(rectangle[1]);
-  draw3DObject(rectangle[2]);
+
+  // Draw Laser
+  Matrices.model = glm::mat4(1.0f);
+  glm::mat4 translateLaser = glm::translate (glm::vec3(0, laser.y, 0));
+  Matrices.model *= (translateLaser);
+  MVP = VP * Matrices.model;
+  glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
+  draw3DObject(laser.laserObj);
 
   // Increment angles
   float increments = 1;
 
   //camera_rotation_angle++; // Simulating camera rotation
-  fall_down_speed += -0.005;
-  triangle_rotation = triangle_rotation + increments*triangle_rot_dir*triangle_rot_status;
+//  triangle_rotation = triangle_rotation + increments*triangle_rot_dir*triangle_rot_status;
   rectangle_rotation = rectangle_rotation + increments*rectangle_rot_dir*rectangle_rot_status;
 }
 
@@ -492,10 +715,13 @@ void initGL (GLFWwindow* window, int width, int height)
 {
     /* Objects should be created before any other gl function and shaders */
 	// Create the models
-//	createTriangle (); // Generate the VAO, VBOs, vertices data & copy into the array buffer
-	createRectangle (randomFloat(-1.0, -1.3), 3.5, 0);
-  createRectangle (randomFloat(-1.3, -1.6), 3.5, 1);
-  createRectangle (randomFloat(-1.6, -1.9), 3.5, 2);
+  total_bricks=0;
+  bricks_speed=0.005;
+  laser.create();
+  baskets[0].color="red";
+  baskets[1].color="green";
+  baskets[0].create();
+  baskets[1].create();
 	
 	// Create and compile our GLSL program from the shaders
 	programID = LoadShaders( "Sample_GL.vert", "Sample_GL.frag" );
@@ -543,8 +769,9 @@ int main (int argc, char** argv)
 
         // Control based on time (Time based transformation like 5 degrees rotation every 0.5s)
         current_time = glfwGetTime(); // Time in seconds
-        if ((current_time - last_update_time) >= 1.0) { // atleast 0.5s elapsed since last frame
+        if ((current_time - last_update_time) >= 1.7) { // atleast 0.5s elapsed since last frame
             // do something every 0.5 seconds ..
+            createBrick();
             last_update_time = current_time;
         }
     }
@@ -552,3 +779,5 @@ int main (int argc, char** argv)
     glfwTerminate();
 //    exit(EXIT_SUCCESS);
 }
+
+
