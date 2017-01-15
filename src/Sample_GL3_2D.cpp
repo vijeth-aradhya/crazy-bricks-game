@@ -214,6 +214,8 @@ class Laser {
       float x_stick_shift;
       float y_stick_shift;
       float rotate_angle;
+      float x_shift_coord;
+      float y_shift_coord;
       VAO *laserObj;
       VAO *stickObj;
       VAO *holeObj;
@@ -291,10 +293,10 @@ class Laser {
         GLfloat vertex_buffer_data_stick [] = {
           -x_coord,-y_coord,0, // vertex 1
           -x_coord,y_coord,0, // vertex 2
-          x_coord,y_coord,0, // vertex 3
+          x_coord,y_coord+0.05,0, // vertex 3
 
-          x_coord,y_coord,0, // vertex 3
-          x_coord,-y_coord,0, // vertex 4
+          x_coord,y_coord+0.05,0, // vertex 3
+          x_coord,-y_coord-0.05,0, // vertex 4
           -x_coord,-y_coord,0  // vertex 1
         };
 
@@ -392,6 +394,55 @@ class Basket {
       }
 };
 
+class Mirror {
+   public:
+      float x;
+      float y;
+      float x_shift;
+      float y_shift;
+      float width;
+      float length;
+      float rotate_angle;
+      VAO *mirrorObj;
+
+      void create (float x_shift, float y_shift, float rotate_angle) {
+
+        float x_coord=0.6, y_coord=0.01;
+        int red=0, green=0, blue=0;
+
+        GLfloat vertex_buffer_data [] = {
+          -x_coord,-y_coord,0, // vertex 1
+          -x_coord,y_coord,0, // vertex 2
+          x_coord,y_coord,0, // vertex 3
+
+          x_coord,y_coord,0, // vertex 3
+          x_coord,-y_coord,0, // vertex 4
+          -x_coord,-y_coord,0  // vertex 1
+        };
+
+        GLfloat color_buffer_data [] = {
+          red,green,blue, // color 1
+          red,green,blue, // color 2
+          red,green,blue, // color 3
+
+          red,green,blue, // color 3
+          red,green,blue, // color 4
+          red,green,blue  // color 1
+        };
+
+        this->x_shift = x_shift;
+        this->y_shift = y_shift;
+        this->length = 2*y_coord;
+        this->width = 2*x_coord;
+        this->rotate_angle = rotate_angle;
+        this->x = x_coord+x_shift-(this->width/2);
+        this->y = y_coord+y_shift;
+
+        // create3DObject creates and returns a handle to a VAO that can be used later
+        this->mirrorObj = create3DObject(GL_TRIANGLES, 6, vertex_buffer_data, color_buffer_data, GL_FILL);
+      }
+};
+
 class Bullet {
    public:
       float x;
@@ -401,7 +452,10 @@ class Bullet {
       float vector_translate;
       float rotate_angle;
       float radius;
+      float x_laser_shift;
+      float y_laser_shift;
       bool status;
+      bool reflected;
       VAO *bulletObj;
 
       void create(float rotate_angle) {
@@ -433,6 +487,7 @@ class Bullet {
         this->rotate_angle=rotate_angle;
         this->vector_translate=0;
         this->status = 1;
+        this->reflected = 0;
         this->bulletObj = create3DObject(GL_TRIANGLES, (parts*9)/3, vertex_buffer_data_hole, color_buffer_data_hole, GL_FILL);
       }
 };
@@ -523,6 +578,8 @@ Basket baskets[2];
 
 Bullet bullets[100];
 
+Mirror mirrors[4];
+
 std::vector<int> regenerateBrick;
 std::vector<int> regenerateBullet;
 //myvector.back();
@@ -541,7 +598,7 @@ void chooseCol(int brick_num) {
       bricks[brick_num].create(randomFloat(-2.3, -0.3));
       break; //optional
     case 1:
-      bricks[brick_num].create(randomFloat(0.7, 1.5));
+      bricks[brick_num].create(randomFloat(0.8, 1.5));
       break; //optional
     case 2:
       bricks[brick_num].create(randomFloat(3.0, 4.0));
@@ -630,6 +687,25 @@ void checkBrickBulletCollision () {
         regenerateBrick.push_back(i);
         bricks[i].vanish();
         break;
+      }
+    }
+  }
+}
+
+void checkMirrorBulletCollision () {
+  int i, j, k=0;
+  float y_brick_center, x_brick_center, x_axis_check, y_axis_check;
+  float c, m;
+  for(i=0;i<1;i++) {
+    m = tan(mirrors[i].rotate_angle*M_PI/180.0f);
+    c = mirrors[i].y-m*mirrors[i].x;
+    for(j=0;j<total_bullets;j++) {
+      if(abs(bullets[j].y-m*bullets[j].x-c)<0.07&&abs(bullets[j].x-mirrors[i].x)<=mirrors[i].width/2){
+        bullets[j].rotate_angle=2*mirrors[i].rotate_angle-bullets[j].rotate_angle;
+        bullets[j].reflected=1;
+        bullets[j].x_laser_shift=bullets[j].x;
+        bullets[j].y_laser_shift=bullets[j].y;
+        bullets[j].vector_translate=0.04;
       }
     }
   }
@@ -780,7 +856,36 @@ void reshapeWindow (GLFWwindow* window, int width, int height)
     Matrices.projection = glm::ortho(-4.0f, 4.0f, -4.0f, 4.0f, 0.1f, 500.0f);
 }
 
-VAO *triangle, *rectangle;
+VAO *triangle, *rectangle, *testCircle;
+
+void testPoint() {
+  int parts = 15;
+  float radius = 0.09;
+  GLfloat vertex_buffer_data_hole[parts*9];
+  GLfloat color_buffer_data_hole[parts*9];
+  int i,j;
+  float angle=(2*M_PI/parts);
+  float current_angle = 0;
+  for(i=0;i<parts;i++){
+      for(j=0;j<3;j++){
+          color_buffer_data_hole[i*9+j*3]=0.5;
+          color_buffer_data_hole[i*9+j*3+1]=0.5;
+          color_buffer_data_hole[i*9+j*3+2]=0.5;
+      }
+      vertex_buffer_data_hole[i*9]=0;
+      vertex_buffer_data_hole[i*9+1]=0;
+      vertex_buffer_data_hole[i*9+2]=0;
+      vertex_buffer_data_hole[i*9+3]=radius*cos(current_angle);
+      vertex_buffer_data_hole[i*9+4]=radius*sin(current_angle);
+      vertex_buffer_data_hole[i*9+5]=0;
+      vertex_buffer_data_hole[i*9+6]=radius*cos(current_angle+angle);
+      vertex_buffer_data_hole[i*9+7]=radius*sin(current_angle+angle);
+      vertex_buffer_data_hole[i*9+8]=0;
+      current_angle+=angle;
+  }
+
+  testCircle = create3DObject(GL_TRIANGLES, (parts*9)/3, vertex_buffer_data_hole, color_buffer_data_hole, GL_FILL);
+}
 
 // Creates the triangle object used in this sample code
 void createTriangle ()
@@ -938,15 +1043,39 @@ void draw ()
   // Draw bullets
   for(i=0;i<total_bullets;i++) {
     Matrices.model = glm::mat4(1.0f);
-    bullets[i].x = laser.x_stick+laser.x_bullet+bullets[i].vector_translate*cos(bullets[i].rotate_angle*M_PI/180.0f);
-    bullets[i].y = laser.y_stick-(laser.stick_length/2)+laser.y_bullet+bullets[i].vector_translate*sin(bullets[i].rotate_angle*M_PI/180.0f), 0;
+    if(!bullets[i].reflected) {
+      bullets[i].x_laser_shift = laser.x_stick+laser.x_bullet;
+      bullets[i].y_laser_shift = laser.y_stick-(laser.stick_length/2)+laser.y_bullet;
+    }
+    bullets[i].x = bullets[i].x_laser_shift+bullets[i].vector_translate*cos(bullets[i].rotate_angle*M_PI/180.0f);
+    bullets[i].y = bullets[i].y_laser_shift+bullets[i].vector_translate*sin(bullets[i].rotate_angle*M_PI/180.0f);
     glm::mat4 translateBullet = glm::translate (glm::vec3(bullets[i].x, bullets[i].y, 0));    
     Matrices.model *= (translateBullet);
     MVP = VP * Matrices.model;
     glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
-    bullets[i].vector_translate += 0.05;
+    bullets[i].vector_translate+=0.04;
     draw3DObject(bullets[i].bulletObj);
   }
+
+  // Draw mirrors
+  for(i=0;i<1;i++) {
+    Matrices.model = glm::mat4(1.0f);
+    glm::mat4 translateMirror = glm::translate (glm::vec3(mirrors[i].x_shift, mirrors[i].y_shift, 0));
+    glm::mat4 rotateMirror = glm::rotate((float)(mirrors[i].rotate_angle*M_PI/180.0f), glm::vec3(0,0,1));
+    Matrices.model *= (translateMirror * rotateMirror);
+    MVP = VP * Matrices.model;
+    glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
+    draw3DObject(mirrors[i].mirrorObj);
+  }
+
+/* TEST POINT
+  Matrices.model = glm::mat4(1.0f);
+  translateObject = glm::translate (glm::vec3(mirrors[0].x, mirrors[0].y, 0));
+  Matrices.model *= (translateObject);
+  MVP = VP * Matrices.model;
+  glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
+  draw3DObject(testCircle);
+*/
 
   // Increment angles
   float increments = 1;
@@ -1020,6 +1149,8 @@ void initGL (GLFWwindow* window, int width, int height)
   baskets[1].color="green";
   baskets[0].create();
   baskets[1].create();
+  mirrors[0].create(-0.5, 1.3, -30);
+  //testPoint();
 	
 	// Create and compile our GLSL program from the shaders
 	programID = LoadShaders( "Sample_GL.vert", "Sample_GL.frag" );
@@ -1066,6 +1197,7 @@ int main (int argc, char** argv)
         checkBrickYLimit();
         checkBrickBulletCollision();
         checkBulletOutOfWindow();
+        checkMirrorBulletCollision();
 
         // Swap Frame Buffer in double buffering
         glfwSwapBuffers(window);
@@ -1085,3 +1217,4 @@ int main (int argc, char** argv)
     glfwTerminate();
 //    exit(EXIT_SUCCESS);
 }
+
