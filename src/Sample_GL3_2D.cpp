@@ -203,31 +203,72 @@ class Laser {
    public:
       float x;
       float y;
+      float x_stick;
+      float y_stick;
+      float stick_width;
+      float stick_length;
+      float x_bullet;
+      float y_bullet;
+      float x_shift;
+      float y_shift;
+      float x_stick_shift;
+      float y_stick_shift;
+      float rotate_angle;
       VAO *laserObj;
+      VAO *stickObj;
+      VAO *holeObj;
 
       void moveUp() {
         this->y+=0.07;
+        this->y_stick+=0.07;
+        this->y_shift+=0.07;
+        this->y_stick_shift+=0.07;
       }
 
       void moveDown() {
         this->y+=-0.07;
+        this->y_stick+=-0.07;
+        this->y_shift+=-0.07;
+        this->y_stick_shift+=-0.07;
+      }
+
+      void stickMoveUp() {
+        if(this->rotate_angle<30.0) {
+          this->rotate_angle+=1.5;
+          if(this->rotate_angle>=0)
+            this->x_bullet = this->stick_width*(1 - cos(this->rotate_angle*M_PI/180.0f));
+          else
+            this->x_bullet = this->stick_width*(1 - cos(this->rotate_angle*M_PI/180.0f));
+          this->y_bullet = this->stick_length*sin(this->rotate_angle*M_PI/180.0f);
+        }
+      }
+
+      void stickMoveDown() {
+        if(this->rotate_angle>-30.0) {
+          this->rotate_angle+=-1.5;
+          if(this->rotate_angle<=0)
+            this->x_bullet = this->stick_width*(1 - cos(this->rotate_angle*M_PI/180.0f));
+          else
+            this->x_bullet = this->stick_width*(1 - cos(this->rotate_angle*M_PI/180.0f));
+          this->y_bullet = this->stick_length*sin(this->rotate_angle*M_PI/180.0f);
+        }
       }
 
       void create () {
 
-        float x_coord=0.3, y_coord=0.2, x_shift=-4, y_shift=0;
+        float x_coord=0.3, y_coord=0.4, x_shift=-4, y_shift=0;
 
-        static const GLfloat vertex_buffer_data [] = {
-          -x_coord+x_shift,-y_coord+y_shift,0, // vertex 1
-          -x_coord+x_shift,y_coord+y_shift,0, // vertex 2
+        GLfloat vertex_buffer_data [] = {
+          -x_coord+x_shift,-y_coord+y_shift-1,0, // vertex 1
+          -x_coord+x_shift,y_coord+y_shift+1,0, // vertex 2
           x_coord+x_shift,y_coord+y_shift,0, // vertex 3
 
           x_coord+x_shift,y_coord+y_shift,0, // vertex 3
           x_coord+x_shift,-y_coord+y_shift,0, // vertex 4
-          -x_coord+x_shift,-y_coord+y_shift,0  // vertex 1
+          -x_coord+x_shift,-y_coord+y_shift-1,0  // vertex 1
         };
 
-        static const GLfloat color_buffer_data [] = {
+        GLfloat color_buffer_data [] = {
           0,0,0, // color 1
           0,0,0, // color 2
           0,0,0, // color 3
@@ -237,11 +278,52 @@ class Laser {
           0,0,0  // color 1
         };
 
-        this->x = x_coord;
-        this->y = y_coord;
+        this->x = x_coord+x_shift;
+        this->y = y_coord+y_shift;
+        this->x_shift = x_shift;
+        this->y_shift = y_shift;
 
         // create3DObject creates and returns a handle to a VAO that can be used later
         this->laserObj = create3DObject(GL_TRIANGLES, 6, vertex_buffer_data, color_buffer_data, GL_FILL);
+
+        x_coord=0.3, y_coord=0.09, x_shift=-3.7, y_shift=0;
+
+        GLfloat vertex_buffer_data_stick [] = {
+          -x_coord,-y_coord,0, // vertex 1
+          -x_coord,y_coord,0, // vertex 2
+          x_coord,y_coord,0, // vertex 3
+
+          x_coord,y_coord,0, // vertex 3
+          x_coord,-y_coord,0, // vertex 4
+          -x_coord,-y_coord,0  // vertex 1
+        };
+
+        GLfloat color_buffer_data_stick [] = {
+          0,0,0, // color 1
+          0,0,0, // color 2
+          0,0,0, // color 3
+
+          0,0,0, // color 3
+          0,0,0, // color 4
+          0,0,0  // color 1
+        };
+
+        this->x_stick = x_coord+x_shift;
+        this->y_stick = y_coord+y_shift;
+        this->x_stick_shift = x_shift;
+        this->y_stick_shift = y_shift;
+        this->rotate_angle = 0;
+        this->stick_length = 2*y_coord;
+        this->stick_width = 2*x_coord;
+        this->x_bullet = 0;
+        this->y_bullet = 0;
+
+        // create3DObject creates and returns a handle to a VAO that can be used later
+        this->stickObj = create3DObject(GL_TRIANGLES, 6, vertex_buffer_data_stick, color_buffer_data_stick, GL_FILL);
+      }
+
+      void shoot() {
+
       }
 };
 
@@ -310,6 +392,51 @@ class Basket {
       }
 };
 
+class Bullet {
+   public:
+      float x;
+      float y;
+      float x_shift;
+      float y_shift;
+      float vector_translate;
+      float rotate_angle;
+      float radius;
+      bool status;
+      VAO *bulletObj;
+
+      void create(float rotate_angle) {
+        int parts = 15;
+        float radius = 0.09;
+        this->radius = radius;
+        GLfloat vertex_buffer_data_hole[parts*9];
+        GLfloat color_buffer_data_hole[parts*9];
+        int i,j;
+        float angle=(2*M_PI/parts);
+        float current_angle = 0;
+        for(i=0;i<parts;i++){
+            for(j=0;j<3;j++){
+                color_buffer_data_hole[i*9+j*3]=0.5;
+                color_buffer_data_hole[i*9+j*3+1]=0.5;
+                color_buffer_data_hole[i*9+j*3+2]=0.5;
+            }
+            vertex_buffer_data_hole[i*9]=0;
+            vertex_buffer_data_hole[i*9+1]=0;
+            vertex_buffer_data_hole[i*9+2]=0;
+            vertex_buffer_data_hole[i*9+3]=radius*cos(current_angle);
+            vertex_buffer_data_hole[i*9+4]=radius*sin(current_angle);
+            vertex_buffer_data_hole[i*9+5]=0;
+            vertex_buffer_data_hole[i*9+6]=radius*cos(current_angle+angle);
+            vertex_buffer_data_hole[i*9+7]=radius*sin(current_angle+angle);
+            vertex_buffer_data_hole[i*9+8]=0;
+            current_angle+=angle;
+        }
+        this->rotate_angle=rotate_angle;
+        this->vector_translate=0;
+        this->status = 1;
+        this->bulletObj = create3DObject(GL_TRIANGLES, (parts*9)/3, vertex_buffer_data_hole, color_buffer_data_hole, GL_FILL);
+      }
+};
+
 float randomFloat(float min, float max)
 {
   float r = (float)rand() / (float)RAND_MAX;
@@ -323,6 +450,7 @@ class Brick {
       float y_shift;
       float length;
       float width;
+      bool status;
       string color;
       VAO *brickObj;
 
@@ -331,7 +459,9 @@ class Brick {
       }
 
       void vanish() {
-        this->y_shift+=-30;
+        this->y_shift+=3000;
+        this->y+=3000;
+        this->status=0;
       }
 
       void create (float x_shift) {
@@ -378,6 +508,7 @@ class Brick {
         this->y_shift = 0;
         this->length = 2*y_coord;
         this->width = 2*x_coord;
+        this->status = 1;
 
         // create3DObject creates and returns a handle to a VAO that can be used later
         this->brickObj = create3DObject(GL_TRIANGLES, 6, vertex_buffer_data, color_buffer_data, GL_FILL);
@@ -390,13 +521,16 @@ Brick bricks[100];
 
 Basket baskets[2];
 
+Bullet bullets[100];
+
 std::vector<int> regenerateBrick;
+std::vector<int> regenerateBullet;
 //myvector.back();
 //myvector.pop_back();
 //myvector.push_back(myint);
 //myvector.size();
 
-int total_bricks, total_score, game_over;
+int total_bricks, total_score, game_over, total_bullets;
 
 float bricks_speed;
 
@@ -426,9 +560,20 @@ void createBrick() {
   }
 }
 
+void shootBullet() {
+  if(regenerateBullet.size()!=0){
+    bullets[regenerateBullet.back()].create(laser.rotate_angle);
+    regenerateBullet.pop_back();
+  }
+  else {
+    bullets[total_bullets].create(laser.rotate_angle);
+    total_bullets++;
+  }
+}
+
 void checkBrickYLimit() {
   int i;
-  for(i=0;i<total_bricks;i++) {
+  for(i=0;i<total_bricks&&bricks[i].status;i++) {
     if(bricks[i].y<baskets[0].y) {
       regenerateBrick.push_back(i);
       bricks[i].vanish();
@@ -438,7 +583,7 @@ void checkBrickYLimit() {
 
 void checkRedBasket() {
   int i;
-  for(i=0;i<total_bricks;i++) {
+  for(i=0;i<total_bricks&&bricks[i].status;i++) {
     if(bricks[i].color=="red" || bricks[i].color=="black") {
       if(bricks[i].y>=baskets[0].y && (bricks[i].y-bricks[i].length)<=baskets[0].y &&
         (baskets[0].x-baskets[0].width)<=(bricks[i].x-bricks[i].width) && baskets[0].x>=bricks[i].x) {
@@ -456,7 +601,7 @@ void checkRedBasket() {
 
 void checkGreenBasket() {
   int i;
-  for(i=0;i<total_bricks;i++) {
+  for(i=0;i<total_bricks&&bricks[i].status;i++) {
     if(bricks[i].color=="green" || bricks[i].color=="black") {
       if(bricks[i].y>=baskets[1].y && (bricks[i].y-bricks[i].length)<=baskets[1].y &&
         (baskets[1].x-baskets[1].width)<=(bricks[i].x-bricks[i].width) && baskets[1].x>=bricks[i].x) {
@@ -472,6 +617,33 @@ void checkGreenBasket() {
   }
 }
 
+void checkBrickBulletCollision () {
+  int i, j;
+  float y_brick_center, x_brick_center, x_axis_check, y_axis_check;
+  for(i=0;i<total_bricks&&bricks[i].status;i++) {
+    y_brick_center = bricks[i].y - (bricks[i].length/2);
+    x_brick_center = bricks[i].x - (bricks[i].width/2);
+    for(j=0;j<total_bullets;j++) {
+      x_axis_check = (bricks[i].width/2) + bullets[j].radius;
+      y_axis_check = (bricks[i].length/2) + bullets[j].radius;
+      if(abs(y_brick_center-bullets[j].y)<=y_axis_check&&abs(x_brick_center-bullets[j].x)<=x_axis_check) {
+        regenerateBrick.push_back(i);
+        bricks[i].vanish();
+        break;
+      }
+    }
+  }
+}
+
+void checkBulletOutOfWindow () {
+  int i;
+  for(i=0;i<total_bullets;i++) {
+    if(abs(bullets[i].x)>25||abs(bullets[i].y)>25) {
+      regenerateBullet.push_back(i);
+    }
+  }
+}
+
 /**************************
  * Customizable functions *
  **************************/
@@ -480,6 +652,7 @@ float triangle_rot_dir = 1;
 float rectangle_rot_dir = 1;
 bool triangle_rot_status = false;
 bool rectangle_rot_status = false;
+double last_update_bullet_time, current_bullet_time;
 
 /* Executed when a regular key is pressed/released/held-down */
 /* Prefered for Keyboard events */
@@ -489,11 +662,24 @@ void keyboard (GLFWwindow* window, int key, int scancode, int action, int mods)
 
     if (action == GLFW_RELEASE) {
         switch (key) {
+            case GLFW_KEY_SPACE:
+                current_bullet_time = glfwGetTime(); // Time in seconds
+                if ((current_bullet_time - last_update_bullet_time) >= 1.7) {
+                  last_update_bullet_time = current_bullet_time;
+                  shootBullet();
+                }
+                break;
             case GLFW_KEY_C:
                 rectangle_rot_status = !rectangle_rot_status;
                 break;
             case GLFW_KEY_P:
                 triangle_rot_status = !triangle_rot_status;
+                break;
+            case GLFW_KEY_K:
+                laser.stickMoveUp();
+                break;
+            case GLFW_KEY_L:
+                laser.stickMoveDown();
                 break;
             case GLFW_KEY_S:
                 laser.moveUp();
@@ -735,18 +921,39 @@ void draw ()
 
   // Draw Laser
   Matrices.model = glm::mat4(1.0f);
-  glm::mat4 translateLaser = glm::translate (glm::vec3(0, laser.y, 0));
+  glm::mat4 translateLaser = glm::translate (glm::vec3(0, laser.y_shift, 0));
   Matrices.model *= (translateLaser);
   MVP = VP * Matrices.model;
   glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
   draw3DObject(laser.laserObj);
 
+  Matrices.model = glm::mat4(1.0f);
+  glm::mat4 translateObject = glm::translate (glm::vec3(laser.x_stick_shift, laser.y_stick_shift, 0));        // glTranslatef
+  glm::mat4 rotateObject = glm::rotate((float)(laser.rotate_angle*M_PI/180.0f), glm::vec3(0,0,1));
+  Matrices.model *= (translateObject * rotateObject);
+  MVP = VP * Matrices.model;
+  glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
+  draw3DObject(laser.stickObj);
+
+  // Draw bullets
+  for(i=0;i<total_bullets;i++) {
+    Matrices.model = glm::mat4(1.0f);
+    bullets[i].x = laser.x_stick+laser.x_bullet+bullets[i].vector_translate*cos(bullets[i].rotate_angle*M_PI/180.0f);
+    bullets[i].y = laser.y_stick-(laser.stick_length/2)+laser.y_bullet+bullets[i].vector_translate*sin(bullets[i].rotate_angle*M_PI/180.0f), 0;
+    glm::mat4 translateBullet = glm::translate (glm::vec3(bullets[i].x, bullets[i].y, 0));    
+    Matrices.model *= (translateBullet);
+    MVP = VP * Matrices.model;
+    glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
+    bullets[i].vector_translate += 0.05;
+    draw3DObject(bullets[i].bulletObj);
+  }
+
   // Increment angles
   float increments = 1;
 
   //camera_rotation_angle++; // Simulating camera rotation
-//  triangle_rotation = triangle_rotation + increments*triangle_rot_dir*triangle_rot_status;
-  rectangle_rotation = rectangle_rotation + increments*rectangle_rot_dir*rectangle_rot_status;
+  //  triangle_rotation = triangle_rotation + increments*triangle_rot_dir*triangle_rot_status;
+  //rectangle_rotation = rectangle_rotation + increments*rectangle_rot_dir*rectangle_rot_status;
 }
 
 /* Initialise glfw window, I/O callbacks and the renderer to use */
@@ -806,6 +1013,7 @@ void initGL (GLFWwindow* window, int width, int height)
   total_bricks=0;
   total_score=0;
   game_over=0;
+  total_bullets=0;
   bricks_speed=0.005;
   laser.create();
   baskets[0].color="red";
@@ -845,6 +1053,8 @@ int main (int argc, char** argv)
 
     double last_update_time = glfwGetTime(), current_time;
 
+    last_update_bullet_time = glfwGetTime();
+
     /* Draw in loop */
     while (!glfwWindowShouldClose(window)) {
 
@@ -854,6 +1064,8 @@ int main (int argc, char** argv)
         checkRedBasket();
         checkGreenBasket();
         checkBrickYLimit();
+        checkBrickBulletCollision();
+        checkBulletOutOfWindow();
 
         // Swap Frame Buffer in double buffering
         glfwSwapBuffers(window);
@@ -873,5 +1085,3 @@ int main (int argc, char** argv)
     glfwTerminate();
 //    exit(EXIT_SUCCESS);
 }
-
-
