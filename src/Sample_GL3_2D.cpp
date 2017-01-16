@@ -235,7 +235,7 @@ class Laser {
       }
 
       void stickMoveUp() {
-        if(this->rotate_angle<30.0) {
+        if(this->rotate_angle<35.0) {
           this->rotate_angle+=1.5;
           if(this->rotate_angle>=0)
             this->x_bullet = this->stick_width*(1 - cos(this->rotate_angle*M_PI/180.0f));
@@ -592,17 +592,14 @@ int total_bricks, total_score, game_over, total_bullets;
 float bricks_speed;
 
 void chooseCol(int brick_num) {
-  int col=(rand()%3);
+  int col=(rand()%2);
   switch(col){
     case 0:
-      bricks[brick_num].create(randomFloat(-2.3, -0.3));
+      bricks[brick_num].create(randomFloat(-2.3, -1.3));
       break; //optional
     case 1:
-      bricks[brick_num].create(randomFloat(0.8, 1.5));
+      bricks[brick_num].create(randomFloat(0.8, 2.5));
       break; //optional
-    case 2:
-      bricks[brick_num].create(randomFloat(3.0, 4.0));
-      break;
   }
 }
 
@@ -696,7 +693,7 @@ void checkMirrorBulletCollision () {
   int i, j, k=0;
   float y_brick_center, x_brick_center, x_axis_check, y_axis_check;
   float c, m;
-  for(i=0;i<1;i++) {
+  for(i=0;i<2;i++) {
     m = tan(mirrors[i].rotate_angle*M_PI/180.0f);
     c = mirrors[i].y-m*mirrors[i].x;
     for(j=0;j<total_bullets;j++) {
@@ -724,7 +721,8 @@ void checkBulletOutOfWindow () {
  * Customizable functions *
  **************************/
 
-float triangle_rot_dir = 1;
+float mirror_rotate_speed, mirror_trans_speed_1, mirror_trans_speed_2;
+bool level1, level2, mirror_up_1, mirror_up_2;
 float rectangle_rot_dir = 1;
 bool triangle_rot_status = false;
 bool rectangle_rot_status = false;
@@ -817,7 +815,7 @@ void mouseButton (GLFWwindow* window, int button, int action, int mods)
     switch (button) {
         case GLFW_MOUSE_BUTTON_LEFT:
             if (action == GLFW_RELEASE)
-                triangle_rot_dir *= -1;
+                //triangle_rot_dir *= -1;
             break;
         case GLFW_MOUSE_BUTTON_RIGHT:
             if (action == GLFW_RELEASE) {
@@ -1058,10 +1056,49 @@ void draw ()
   }
 
   // Draw mirrors
-  for(i=0;i<1;i++) {
+  glm::mat4 rotateMirror;
+  for(i=0;i<2;i++) {
     Matrices.model = glm::mat4(1.0f);
     glm::mat4 translateMirror = glm::translate (glm::vec3(mirrors[i].x_shift, mirrors[i].y_shift, 0));
-    glm::mat4 rotateMirror = glm::rotate((float)(mirrors[i].rotate_angle*M_PI/180.0f), glm::vec3(0,0,1));
+    if(i<2) {
+      if(i==0){
+        if(level1)  
+          mirrors[i].rotate_angle+=mirror_rotate_speed;
+        if(level2) {
+          mirrors[i].rotate_angle+=mirror_rotate_speed+3;
+          mirrors[i].y-=mirror_trans_speed_1;
+          if((mirrors[i].y_shift+mirror_trans_speed_1)<0.0)
+            mirror_up_1=1;
+          if((mirrors[i].y_shift+mirror_trans_speed_1)>2.9)
+            mirror_up_1=0;
+          if(!mirror_up_1)
+            mirror_trans_speed_1-=0.013;
+          else
+            mirror_trans_speed_1+=0.013;
+          translateMirror = glm::translate (glm::vec3(mirrors[i].x_shift, mirrors[i].y_shift+mirror_trans_speed_1, 0));
+          mirrors[i].y+=mirror_trans_speed_1;
+        }
+      }
+      else {
+        if(level1)
+          mirrors[i].rotate_angle-=mirror_rotate_speed;
+        if(level2) {
+          if(mirrors[i].rotate_angle<-360) {
+            mirrors[i].rotate_angle=0;
+            mirror_up_2=1;
+          }
+          if(mirrors[i].rotate_angle>360) {
+            mirrors[i].rotate_angle=0;
+            mirror_up_2=0;
+          }
+          if(!mirror_up_2)
+            mirrors[i].rotate_angle-=mirror_rotate_speed+2;
+          else
+            mirrors[i].rotate_angle+=mirror_rotate_speed+2;
+        }
+      }
+    }
+    rotateMirror = glm::rotate((float)(mirrors[i].rotate_angle*M_PI/180.0f), glm::vec3(0,0,1));
     Matrices.model *= (translateMirror * rotateMirror);
     MVP = VP * Matrices.model;
     glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
@@ -1144,12 +1181,20 @@ void initGL (GLFWwindow* window, int width, int height)
   game_over=0;
   total_bullets=0;
   bricks_speed=0.005;
+  mirror_rotate_speed=1;
+  mirror_trans_speed_1=0;
+  mirror_trans_speed_2=0;
+  mirror_up_1=0;
+  mirror_up_2=0;
   laser.create();
   baskets[0].color="red";
   baskets[1].color="green";
   baskets[0].create();
   baskets[1].create();
-  mirrors[0].create(-0.5, 1.3, -30);
+  mirrors[0].create(0.2, 2.9, -30);
+  mirrors[1].create(0.2, -1.7, 25);
+  level1=1;
+  level2=0;
   //testPoint();
 	
 	// Create and compile our GLSL program from the shaders
@@ -1207,7 +1252,7 @@ int main (int argc, char** argv)
 
         // Control based on time (Time based transformation like 5 degrees rotation every 0.5s)
         current_time = glfwGetTime(); // Time in seconds
-        if ((current_time - last_update_time) >= 1.7) { // atleast 0.5s elapsed since last frame
+        if ((current_time - last_update_time) >= 1.3) { // atleast 0.5s elapsed since last frame
             // do something every 0.5 seconds ..
             createBrick();
             last_update_time = current_time;
