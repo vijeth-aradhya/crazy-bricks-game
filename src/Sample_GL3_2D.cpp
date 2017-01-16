@@ -246,7 +246,7 @@ class Laser {
       }
 
       void stickMoveDown() {
-        if(this->rotate_angle>-30.0) {
+        if(this->rotate_angle>-35.0) {
           this->rotate_angle+=-1.5;
           if(this->rotate_angle<=0)
             this->x_bullet = this->stick_width*(1 - cos(this->rotate_angle*M_PI/180.0f));
@@ -271,13 +271,13 @@ class Laser {
         };
 
         GLfloat color_buffer_data [] = {
-          0,0,0, // color 1
-          0,0,0, // color 2
+          0,0.5,0.3, // color 1
+          0,0.5,0.3, // color 2
           0,0,0, // color 3
 
           0,0,0, // color 3
           0,0,0, // color 4
-          0,0,0  // color 1
+          0,0.5,0.3  // color 1
         };
 
         this->x = x_coord+x_shift;
@@ -301,13 +301,13 @@ class Laser {
         };
 
         GLfloat color_buffer_data_stick [] = {
-          0,0,0, // color 1
-          0,0,0, // color 2
+          0.3,0,0.3, // color 1
+          0.3,0,0.3, // color 2
           0,0,0, // color 3
 
           0,0,0, // color 3
           0,0,0, // color 4
-          0,0,0  // color 1
+          0.3,0,0.3  // color 1
         };
 
         this->x_stick = x_coord+x_shift;
@@ -338,6 +338,8 @@ class Basket {
       float length;
       string color;
       VAO *basketObj;
+      VAO *mouthObj1;
+      VAO *mouthObj2;
 
       void moveLeft() {
         this->x+=-0.4;
@@ -363,7 +365,7 @@ class Basket {
           x_shift=1.0;
         }
 
-        GLfloat vertex_buffer_data [] = {
+        GLfloat vertex_buffer_data_mouth1 [] = {
           -x_coord+x_shift,-y_coord+y_shift,0, // vertex 1
           -x_coord+x_shift,y_coord+y_shift,0, // vertex 2
           x_coord+x_shift,y_coord+y_shift,0, // vertex 3
@@ -373,14 +375,14 @@ class Basket {
           -x_coord+x_shift,-y_coord+y_shift,0  // vertex 1
         };
 
-        GLfloat color_buffer_data [] = {
-          red,green,blue, // color 1
+        GLfloat color_buffer_data_mouth1 [] = {
+          red-0.8,green-0.8,blue, // color 1
           red,green,blue, // color 2
           red,green,blue, // color 3
 
           red,green,blue, // color 3
-          red,green,blue, // color 4
-          red,green,blue  // color 1
+          red-0.8,green-0.8,blue, // color 4
+          red-0.8,green-0.8,blue  // color 1
         };
 
         this->x = x_coord+x_shift;
@@ -390,7 +392,59 @@ class Basket {
         this->width = 2*x_coord;
 
         // create3DObject creates and returns a handle to a VAO that can be used later
-        this->basketObj = create3DObject(GL_TRIANGLES, 6, vertex_buffer_data, color_buffer_data, GL_FILL);
+        this->basketObj = create3DObject(GL_TRIANGLES, 6, vertex_buffer_data_mouth1, color_buffer_data_mouth1, GL_FILL);
+
+        red=1;
+        green=1;
+        blue=1;
+        
+        x_coord/=2;
+        y_coord=0.02;
+        y_shift+=this->length/2;
+        
+        GLfloat vertex_buffer_data [] = {
+          -x_coord+x_shift,-y_coord+y_shift,0, // vertex 1
+          -x_coord+x_shift,y_coord+y_shift,0, // vertex 2
+          x_coord+x_shift,y_coord+y_shift,0, // vertex 3
+
+          x_coord+x_shift,y_coord+y_shift,0, // vertex 3
+          x_coord+x_shift,-y_coord+y_shift-0.08,0, // vertex 4
+          -x_coord+x_shift,-y_coord+y_shift,0  // vertex 1
+        };
+
+        GLfloat color_buffer_data [] = {
+          red-0.5,green-0.5,blue-0.5, // color 1
+          red-0.5,green-0.5,blue-0.5, // color 2
+          red,green,blue, // color 3
+
+          red,green,blue, // color 3
+          red-1,green-1,blue-1, // color 4
+          red-0.5,green-0.5,blue-0.5, // color 1
+        };
+
+        this->mouthObj1 = create3DObject(GL_TRIANGLES, 6, vertex_buffer_data, color_buffer_data, GL_FILL);
+        
+        GLfloat vertex_buffer_data_mouth2 [] = {
+          -x_coord+x_shift,-y_coord+y_shift-0.08,0, // vertex 1
+          -x_coord+x_shift,y_coord+y_shift,0, // vertex 2
+          x_coord+x_shift,y_coord+y_shift,0, // vertex 3
+
+          x_coord+x_shift,y_coord+y_shift,0, // vertex 3
+          x_coord+x_shift,-y_coord+y_shift,0, // vertex 4
+          -x_coord+x_shift,-y_coord+y_shift,0  // vertex 1
+        };
+
+        GLfloat color_buffer_data_mouth2 [] = {
+          red-1,green-1,blue-1, // color 1
+          red,green,blue, // color 2
+          red-0.5,green-0.5,blue-0.5, // color 3
+
+          red-0.5,green-0.5,blue-0.5, // color 3
+          red-0.5,green-0.5,blue-0.5, // color 4
+          red,green,blue  // color 1
+        };
+
+        this->mouthObj2 = create3DObject(GL_TRIANGLES, 6, vertex_buffer_data_mouth2, color_buffer_data_mouth2, GL_FILL);
       }
 };
 
@@ -439,7 +493,7 @@ class Mirror {
         this->y = y_coord+y_shift;
 
         // create3DObject creates and returns a handle to a VAO that can be used later
-        this->mirrorObj = create3DObject(GL_TRIANGLES, 6, vertex_buffer_data, color_buffer_data, GL_FILL);
+        this->mirrorObj = create3DObject(GL_TRIANGLES, 6, vertex_buffer_data, color_buffer_data, GL_LINE);
       }
 };
 
@@ -459,7 +513,7 @@ class Bullet {
       VAO *bulletObj;
 
       void create(float rotate_angle) {
-        int parts = 15;
+        int parts = 1000;
         float radius = 0.09;
         this->radius = radius;
         GLfloat vertex_buffer_data_hole[parts*9];
@@ -578,7 +632,7 @@ Basket baskets[2];
 
 Bullet bullets[100];
 
-Mirror mirrors[4];
+Mirror mirrors[5];
 
 std::vector<int> regenerateBrick;
 std::vector<int> regenerateBullet;
@@ -587,9 +641,13 @@ std::vector<int> regenerateBullet;
 //myvector.push_back(myint);
 //myvector.size();
 
-int total_bricks, total_score, game_over, total_bullets;
+int total_bricks, total_score, game_over, total_bullets, total_mirrors;
 
-float bricks_speed;
+float bricks_speed, mirror_rotate_speed, mirror_trans_speed_1, mirror_trans_speed_2;
+
+double last_update_bullet_time, current_bullet_time, curr_mirror_time, last_update_mirror_time;
+
+bool level1, level2, level3, mirror_up_1, mirror_up_2;
 
 void chooseCol(int brick_num) {
   int col=(rand()%2);
@@ -645,8 +703,9 @@ void checkRedBasket() {
         if(bricks[i].color=="black")
           game_over=1;
         else{
-          total_score+=10;
-          printf("Caught Red %d\n", i);
+          total_score+=20;
+          regenerateBrick.push_back(i);
+          bricks[i].vanish();
         }
       }
     }
@@ -663,8 +722,10 @@ void checkGreenBasket() {
         if(bricks[i].color=="black")
           game_over=1;
         else{
-          total_score+=10;
-          printf("Caught Green %d\n", i);
+          total_score+=20;
+          regenerateBrick.push_back(i);
+          bricks[i].vanish();
+          //printf("Caught Green %d\n", i);
         }
       }
     }
@@ -681,6 +742,8 @@ void checkBrickBulletCollision () {
       x_axis_check = (bricks[i].width/2) + bullets[j].radius;
       y_axis_check = (bricks[i].length/2) + bullets[j].radius;
       if(abs(y_brick_center-bullets[j].y)<=y_axis_check&&abs(x_brick_center-bullets[j].x)<=x_axis_check) {
+        if(bricks[i].color=="black")
+          total_score+=10;
         regenerateBrick.push_back(i);
         bricks[i].vanish();
         break;
@@ -693,7 +756,7 @@ void checkMirrorBulletCollision () {
   int i, j, k=0;
   float y_brick_center, x_brick_center, x_axis_check, y_axis_check;
   float c, m;
-  for(i=0;i<2;i++) {
+  for(i=0;i<total_mirrors;i++) {
     m = tan(mirrors[i].rotate_angle*M_PI/180.0f);
     c = mirrors[i].y-m*mirrors[i].x;
     for(j=0;j<total_bullets;j++) {
@@ -717,16 +780,53 @@ void checkBulletOutOfWindow () {
   }
 }
 
+void setRandomizedMirror () {
+  curr_mirror_time = glfwGetTime();
+  if((curr_mirror_time-last_update_mirror_time) >=1.5 && level3) {
+    int col=rand()%2;
+    float x_coord;
+    if(col)
+      x_coord=randomFloat(-2.3, -1.3);
+    else
+      x_coord=randomFloat(0.8, 2.5);
+    mirrors[4].create(x_coord, randomFloat(-1.6, 2.2), randomFloat(-360, 360));
+    last_update_mirror_time=curr_mirror_time;
+  }
+}
+
+void checkLevel() {
+  if(total_score>20 && total_score<40)
+    level2=1;
+  else if(total_score>40){
+    level3=1;
+    total_mirrors=5;
+  }
+}
+
+void checkGameOver () {
+  if(game_over)
+    exit(0);
+}
+
+void updateGameStatus () {
+  checkRedBasket();
+  checkGreenBasket();
+  checkGameOver();
+  checkBrickBulletCollision();
+  checkMirrorBulletCollision();
+  checkBulletOutOfWindow();
+  checkBrickYLimit();
+  checkLevel();
+  setRandomizedMirror();
+}
+
 /**************************
  * Customizable functions *
  **************************/
 
-float mirror_rotate_speed, mirror_trans_speed_1, mirror_trans_speed_2;
-bool level1, level2, mirror_up_1, mirror_up_2;
 float rectangle_rot_dir = 1;
 bool triangle_rot_status = false;
 bool rectangle_rot_status = false;
-double last_update_bullet_time, current_bullet_time;
 
 /* Executed when a regular key is pressed/released/held-down */
 /* Prefered for Keyboard events */
@@ -1018,6 +1118,20 @@ void draw ()
     MVP = VP * Matrices.model;
     glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
     draw3DObject(baskets[i].basketObj);
+
+    Matrices.model = glm::mat4(1.0f);
+    translateObject = glm::translate (glm::vec3(baskets[i].x_shift-(baskets[i].width/4), 0, 0));
+    Matrices.model *= (translateObject);
+    MVP = VP * Matrices.model;
+    glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
+    draw3DObject(baskets[i].mouthObj1);
+
+    Matrices.model = glm::mat4(1.0f);
+    translateObject = glm::translate (glm::vec3(baskets[i].x_shift+(baskets[i].width/4), 0, 0));
+    Matrices.model *= (translateObject);
+    MVP = VP * Matrices.model;
+    glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
+    draw3DObject(baskets[i].mouthObj2);
   }
 
   // draw3DObject draws the VAO given to it using current MVP matrix
@@ -1057,7 +1171,7 @@ void draw ()
 
   // Draw mirrors
   glm::mat4 rotateMirror;
-  for(i=0;i<2;i++) {
+  for(i=0;i<total_mirrors;i++) {
     Matrices.model = glm::mat4(1.0f);
     glm::mat4 translateMirror = glm::translate (glm::vec3(mirrors[i].x_shift, mirrors[i].y_shift, 0));
     if(i<2) {
@@ -1080,21 +1194,19 @@ void draw ()
         }
       }
       else {
-        if(level1)
-          mirrors[i].rotate_angle-=mirror_rotate_speed;
         if(level2) {
-          if(mirrors[i].rotate_angle<-360) {
+          if(mirrors[i].rotate_angle<-150) {
             mirrors[i].rotate_angle=0;
             mirror_up_2=1;
           }
-          if(mirrors[i].rotate_angle>360) {
+          if(mirrors[i].rotate_angle>150) {
             mirrors[i].rotate_angle=0;
             mirror_up_2=0;
           }
           if(!mirror_up_2)
-            mirrors[i].rotate_angle-=mirror_rotate_speed+2;
+            mirrors[i].rotate_angle-=mirror_rotate_speed+0.7;
           else
-            mirrors[i].rotate_angle+=mirror_rotate_speed+2;
+            mirrors[i].rotate_angle+=mirror_rotate_speed+0.7;
         }
       }
     }
@@ -1179,6 +1291,7 @@ void initGL (GLFWwindow* window, int width, int height)
   total_bricks=0;
   total_score=0;
   game_over=0;
+  total_mirrors=4;
   total_bullets=0;
   bricks_speed=0.005;
   mirror_rotate_speed=1;
@@ -1193,8 +1306,11 @@ void initGL (GLFWwindow* window, int width, int height)
   baskets[1].create();
   mirrors[0].create(0.2, 2.9, -30);
   mirrors[1].create(0.2, -1.7, 25);
+  mirrors[2].create(3.2, 2.3, -45);
+  mirrors[3].create(3.2, -1.3, 70);
   level1=1;
   level2=0;
+  level3=0;
   //testPoint();
 	
 	// Create and compile our GLSL program from the shaders
@@ -1230,6 +1346,7 @@ int main (int argc, char** argv)
     double last_update_time = glfwGetTime(), current_time;
 
     last_update_bullet_time = glfwGetTime();
+    last_update_mirror_time = last_update_bullet_time;
 
     /* Draw in loop */
     while (!glfwWindowShouldClose(window)) {
@@ -1237,12 +1354,8 @@ int main (int argc, char** argv)
         // OpenGL Draw commands
         draw();
 
-        checkRedBasket();
-        checkGreenBasket();
-        checkBrickYLimit();
-        checkBrickBulletCollision();
-        checkBulletOutOfWindow();
-        checkMirrorBulletCollision();
+        // Update the game status each iter
+        updateGameStatus();
 
         // Swap Frame Buffer in double buffering
         glfwSwapBuffers(window);
@@ -1252,8 +1365,7 @@ int main (int argc, char** argv)
 
         // Control based on time (Time based transformation like 5 degrees rotation every 0.5s)
         current_time = glfwGetTime(); // Time in seconds
-        if ((current_time - last_update_time) >= 1.3) { // atleast 0.5s elapsed since last frame
-            // do something every 0.5 seconds ..
+        if ((current_time - last_update_time) >= 1.5) { // atleast 1.5s elapsed since last frame
             createBrick();
             last_update_time = current_time;
         }
@@ -1261,5 +1373,4 @@ int main (int argc, char** argv)
 
     glfwTerminate();
 //    exit(EXIT_SUCCESS);
-}
-
+} 
