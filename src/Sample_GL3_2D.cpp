@@ -795,9 +795,9 @@ void setRandomizedMirror () {
 }
 
 void checkLevel() {
-  if(total_score>20 && total_score<40)
+  if(total_score>20 && total_score<60)
     level2=1;
-  else if(total_score>40){
+  else if(total_score>60){
     level3=1;
     total_mirrors=5;
   }
@@ -838,21 +838,15 @@ void keyboard (GLFWwindow* window, int key, int scancode, int action, int mods)
         switch (key) {
             case GLFW_KEY_SPACE:
                 current_bullet_time = glfwGetTime(); // Time in seconds
-                if ((current_bullet_time - last_update_bullet_time) >= 1.7) {
+                if ((current_bullet_time - last_update_bullet_time) >= 1.0) {
                   last_update_bullet_time = current_bullet_time;
                   shootBullet();
                 }
                 break;
-            case GLFW_KEY_C:
-                rectangle_rot_status = !rectangle_rot_status;
-                break;
-            case GLFW_KEY_P:
-                triangle_rot_status = !triangle_rot_status;
-                break;
-            case GLFW_KEY_K:
+            case GLFW_KEY_A:
                 laser.stickMoveUp();
                 break;
-            case GLFW_KEY_L:
+            case GLFW_KEY_D:
                 laser.stickMoveDown();
                 break;
             case GLFW_KEY_S:
@@ -861,17 +855,17 @@ void keyboard (GLFWwindow* window, int key, int scancode, int action, int mods)
             case GLFW_KEY_F:
                 laser.moveDown();
                 break;
-            case GLFW_KEY_G:
-                baskets[0].moveLeft();
+            case GLFW_KEY_LEFT:
+                if(mods == GLFW_MOD_CONTROL)
+                  baskets[0].moveLeft();
+                if(mods == GLFW_MOD_ALT)
+                  baskets[1].moveLeft();
                 break;
-            case GLFW_KEY_H:
-                baskets[0].moveRight();
-                break;
-            case GLFW_KEY_R:
-                baskets[1].moveLeft();
-                break;
-            case GLFW_KEY_T:
-                baskets[1].moveRight();
+            case GLFW_KEY_RIGHT:
+                if(mods == GLFW_MOD_CONTROL)
+                  baskets[0].moveRight();
+                if(mods == GLFW_MOD_ALT)
+                  baskets[1].moveRight();
                 break;
             case GLFW_KEY_N:
                 if(bricks_speed<=0.02)
@@ -1186,9 +1180,9 @@ void draw ()
           if((mirrors[i].y_shift+mirror_trans_speed_1)>2.9)
             mirror_up_1=0;
           if(!mirror_up_1)
-            mirror_trans_speed_1-=0.013;
+            mirror_trans_speed_1-=0.007;
           else
-            mirror_trans_speed_1+=0.013;
+            mirror_trans_speed_1+=0.007;
           translateMirror = glm::translate (glm::vec3(mirrors[i].x_shift, mirrors[i].y_shift+mirror_trans_speed_1, 0));
           mirrors[i].y+=mirror_trans_speed_1;
         }
