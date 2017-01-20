@@ -523,9 +523,9 @@ class Bullet {
         float current_angle = 0;
         for(i=0;i<parts;i++){
             for(j=0;j<3;j++){
-                color_buffer_data_hole[i*9+j*3]=0.5;
-                color_buffer_data_hole[i*9+j*3+1]=0.5;
-                color_buffer_data_hole[i*9+j*3+2]=0.5;
+                color_buffer_data_hole[i*9+j*3]=1;
+                color_buffer_data_hole[i*9+j*3+1]=1;
+                color_buffer_data_hole[i*9+j*3+2]=1;
             }
             vertex_buffer_data_hole[i*9]=0;
             vertex_buffer_data_hole[i*9+1]=0;
@@ -1549,10 +1549,10 @@ void draw ()
     }
   }
 
-
-/* TEST POINT
+/*
+  //TEST POINT
   Matrices.model = glm::mat4(1.0f);
-  translateObject = glm::translate (glm::vec3(mirrors[0].x, mirrors[0].y, 0));
+  translateObject = glm::translate (glm::vec3(mirrors[3].x_shift, mirrors[3].y_shift, 0));
   Matrices.model *= (translateObject);
   MVP = VP * Matrices.model;
   glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
@@ -1641,7 +1641,7 @@ void initGL (GLFWwindow* window, int width, int height)
   mirrors[0].create(0.2, 2.9, -30);
   mirrors[1].create(0.2, -1.7, 25);
   mirrors[2].create(3.2, 2.3, -45);
-  mirrors[3].create(3.2, -1.3, 70);
+  mirrors[3].create(3.6, -1.6, 60);
   level1=1;
   level2=0;
   level3=0;
@@ -1658,7 +1658,7 @@ void initGL (GLFWwindow* window, int width, int height)
 	reshapeWindow (window, width, height);
 
     // Background color of the scene
-	glClearColor (1.0f, 1.0f, 1.0f, 0.0f); // R, G, B, A
+	glClearColor (0.6f, 0.6f, 0.6f, 0.0f); // R, G, B, A
 	glClearDepth (1.0f);
 
 	glEnable (GL_DEPTH_TEST);
