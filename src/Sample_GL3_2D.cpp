@@ -624,7 +624,267 @@ class Brick {
       }
 };
 
+class SevenSegment {
+   public:
+      float x;
+      float y;
+      float y_shift;
+      float x_shift;
+      float length;
+      float width;
+      VAO *a, *b, *c, *d, *e, *f, *g;
+      bool A, B, C, D, E, F, G;
+
+      void create (float X_SHIFT, float Y_SHIFT, int number) {
+
+        this->x_shift = X_SHIFT;
+        this->y_shift = Y_SHIFT;
+        this->A=1; this->B=1; this->C=1; this->D=1; this->E=1; this->F=1; this->G=1;
+
+        float x_coord, y_coord, red=0.5, blue=0, green=0, x_shift, y_shift;
+
+        if(number > 10 || number < 0 ) 
+          return;
+
+        switch(number){
+          case 0:
+            this->G=0;
+            break; //optional
+          case 1:
+            this->G=0;
+            this->F=0;
+            this->E=0;
+            this->A=0;
+            this->D=0;
+            break; //optional
+          case 2:
+            this->F=0;
+            this->C=0;
+            break; //optional
+          case 3:
+            this->F=0;
+            this->E=0;
+            break; //optional
+          case 4:
+            this->A=0;
+            this->E=0;
+            this->D=0;
+            break; //optional
+          case 5:
+            this->B=0;
+            this->E=0;
+            break; //optional
+          case 6:
+            this->B=0;
+            break; //optional
+          case 7:
+            this->G=0;
+            this->E=0;
+            this->F=0;
+            this->D=0;
+            break; //optional
+          case 8:
+            break; //optional
+          case 9:
+            this->E=0;
+            break; //optional
+        }
+        
+        if(this->G) {
+          y_shift = 0, x_coord=0.09, y_coord=0.04, x_shift=0;
+
+          GLfloat vertex_buffer_data_g [] = {
+            -x_coord+x_shift,-y_coord+y_shift,0, // vertex 1
+            -x_coord+x_shift,y_coord+y_shift,0, // vertex 2
+            x_coord+x_shift,y_coord+y_shift,0, // vertex 3
+
+            x_coord+x_shift,y_coord+y_shift,0, // vertex 3
+            x_coord+x_shift,-y_coord+y_shift,0, // vertex 4
+            -x_coord+x_shift,-y_coord+y_shift,0  // vertex 1
+          };
+
+          GLfloat color_buffer_data_g [] = {
+            red,green,blue, // color 1
+            red,green,blue, // color 2
+            red,green,blue, // color 3
+
+            red,green,blue, // color 3
+            red,green,blue, // color 4
+            red,green,blue  // color 1
+          };
+
+          G = 1;
+          this->g = create3DObject(GL_TRIANGLES, 6, vertex_buffer_data_g, color_buffer_data_g, GL_FILL);
+        }
+
+        if(this->A) {
+          y_shift = 0.25, x_coord=0.09, y_coord=0.04, x_shift=0;
+
+          GLfloat vertex_buffer_data_a [] = {
+            -x_coord+x_shift,-y_coord+y_shift,0, // vertex 1
+            -x_coord+x_shift,y_coord+y_shift,0, // vertex 2
+            x_coord+x_shift,y_coord+y_shift,0, // vertex 3
+
+            x_coord+x_shift,y_coord+y_shift,0, // vertex 3
+            x_coord+x_shift,-y_coord+y_shift,0, // vertex 4
+            -x_coord+x_shift,-y_coord+y_shift,0  // vertex 1
+          };
+
+          GLfloat color_buffer_data_a [] = {
+            red,green,blue, // color 1
+            red,green,blue, // color 2
+            red,green,blue, // color 3
+
+            red,green,blue, // color 3
+            red,green,blue, // color 4
+            red,green,blue  // color 1
+          };
+
+          A = 1;
+          this->a = create3DObject(GL_TRIANGLES, 6, vertex_buffer_data_a, color_buffer_data_a, GL_FILL);
+        }
+
+        if(this->D) {
+          x_coord=0.09, y_coord=0.04, x_shift=0, y_shift = -0.25;
+
+          GLfloat vertex_buffer_data_d [] = {
+            -x_coord+x_shift,-y_coord+y_shift,0, // vertex 1
+            -x_coord+x_shift,y_coord+y_shift,0, // vertex 2
+            x_coord+x_shift,y_coord+y_shift,0, // vertex 3
+
+            x_coord+x_shift,y_coord+y_shift,0, // vertex 3
+            x_coord+x_shift,-y_coord+y_shift,0, // vertex 4
+            -x_coord+x_shift,-y_coord+y_shift,0  // vertex 1
+          };
+
+          GLfloat color_buffer_data_d [] = {
+            red,green,blue, // color 1
+            red,green,blue, // color 2
+            red,green,blue, // color 3
+
+            red,green,blue, // color 3
+            red,green,blue, // color 4
+            red,green,blue  // color 1
+          };
+
+          D = 1;
+          this->d = create3DObject(GL_TRIANGLES, 6, vertex_buffer_data_d, color_buffer_data_d, GL_FILL);
+        }
+
+        if(this->C) {
+          x_shift = 0.11, x_coord=0.025, y_coord=0.12, y_shift=-0.12;
+
+          GLfloat vertex_buffer_data_c [] = {
+            -x_coord+x_shift,-y_coord+y_shift,0, // vertex 1
+            -x_coord+x_shift,y_coord+y_shift,0, // vertex 2
+            x_coord+x_shift,y_coord+y_shift,0, // vertex 3
+
+            x_coord+x_shift,y_coord+y_shift,0, // vertex 3
+            x_coord+x_shift,-y_coord+y_shift,0, // vertex 4
+            -x_coord+x_shift,-y_coord+y_shift,0  // vertex 1
+          };
+
+          GLfloat color_buffer_data_c [] = {
+            red,green,blue, // color 1
+            red,green,blue, // color 2
+            red,green,blue, // color 3
+
+            red,green,blue, // color 3
+            red,green,blue, // color 4
+            red,green,blue  // color 1
+          };
+
+          C = 1;
+          this->c = create3DObject(GL_TRIANGLES, 6, vertex_buffer_data_c, color_buffer_data_c, GL_FILL);
+        }
+
+        
+        if(this->B) {
+          x_shift = 0.11, x_coord=0.025, y_coord=0.12, y_shift=0.12;
+
+          GLfloat vertex_buffer_data_b [] = {
+            -x_coord+x_shift,-y_coord+y_shift,0, // vertex 1
+            -x_coord+x_shift,y_coord+y_shift,0, // vertex 2
+            x_coord+x_shift,y_coord+y_shift,0, // vertex 3
+
+            x_coord+x_shift,y_coord+y_shift,0, // vertex 3
+            x_coord+x_shift,-y_coord+y_shift,0, // vertex 4
+            -x_coord+x_shift,-y_coord+y_shift,0  // vertex 1
+          };
+
+          GLfloat color_buffer_data_b [] = {
+            red,green,blue, // color 1
+            red,green,blue, // color 2
+            red,green,blue, // color 3
+
+            red,green,blue, // color 3
+            red,green,blue, // color 4
+            red,green,blue  // color 1
+          };
+
+          B = 1;
+          this->b = create3DObject(GL_TRIANGLES, 6, vertex_buffer_data_b, color_buffer_data_b, GL_FILL);
+        }
+
+        if(this->E) {
+          x_shift = -0.11, x_coord=0.025, y_coord=0.12, y_shift=-0.12;
+
+          GLfloat vertex_buffer_data_e [] = {
+            -x_coord+x_shift,-y_coord+y_shift,0, // vertex 1
+            -x_coord+x_shift,y_coord+y_shift,0, // vertex 2
+            x_coord+x_shift,y_coord+y_shift,0, // vertex 3
+
+            x_coord+x_shift,y_coord+y_shift,0, // vertex 3
+            x_coord+x_shift,-y_coord+y_shift,0, // vertex 4
+            -x_coord+x_shift,-y_coord+y_shift,0  // vertex 1
+          };
+
+          GLfloat color_buffer_data_e [] = {
+            red,green,blue, // color 1
+            red,green,blue, // color 2
+            red,green,blue, // color 3
+
+            red,green,blue, // color 3
+            red,green,blue, // color 4
+            red,green,blue  // color 1
+          };
+
+          E = 1;
+          this->e = create3DObject(GL_TRIANGLES, 6, vertex_buffer_data_e, color_buffer_data_e, GL_FILL);
+        }
+
+        if(this->F) {
+          x_shift = -0.11, x_coord=0.025, y_coord=0.12, y_shift=0.12;
+
+          GLfloat vertex_buffer_data_f [] = {
+            -x_coord+x_shift,-y_coord+y_shift,0, // vertex 1
+            -x_coord+x_shift,y_coord+y_shift,0, // vertex 2
+            x_coord+x_shift,y_coord+y_shift,0, // vertex 3
+
+            x_coord+x_shift,y_coord+y_shift,0, // vertex 3
+            x_coord+x_shift,-y_coord+y_shift,0, // vertex 4
+            -x_coord+x_shift,-y_coord+y_shift,0  // vertex 1
+          };
+
+          GLfloat color_buffer_data_f [] = {
+            red,green,blue, // color 1
+            red,green,blue, // color 2
+            red,green,blue, // color 3
+
+            red,green,blue, // color 3
+            red,green,blue, // color 4
+            red,green,blue  // color 1
+          };
+
+          F = 1;
+          this->f = create3DObject(GL_TRIANGLES, 6, vertex_buffer_data_f, color_buffer_data_f, GL_FILL);
+        }
+      }
+};
+
 Laser laser;
+
+SevenSegment score_board[4];
 
 Brick bricks[100];
 
@@ -641,7 +901,7 @@ std::vector<int> regenerateBullet;
 //myvector.push_back(myint);
 //myvector.size();
 
-int total_bricks, total_score, game_over, total_bullets, total_mirrors;
+int total_bricks, total_score, game_over, total_bullets, total_mirrors, total_time;
 
 float bricks_speed, mirror_rotate_speed, mirror_trans_speed_1, mirror_trans_speed_2;
 
@@ -703,7 +963,7 @@ void checkRedBasket() {
         if(bricks[i].color=="black")
           game_over=1;
         else{
-          total_score+=20;
+          total_score+=3;
           regenerateBrick.push_back(i);
           bricks[i].vanish();
         }
@@ -722,7 +982,7 @@ void checkGreenBasket() {
         if(bricks[i].color=="black")
           game_over=1;
         else{
-          total_score+=20;
+          total_score+=3;
           regenerateBrick.push_back(i);
           bricks[i].vanish();
           //printf("Caught Green %d\n", i);
@@ -743,7 +1003,7 @@ void checkBrickBulletCollision () {
       y_axis_check = (bricks[i].length/2) + bullets[j].radius;
       if(abs(y_brick_center-bullets[j].y)<=y_axis_check&&abs(x_brick_center-bullets[j].x)<=x_axis_check) {
         if(bricks[i].color=="black")
-          total_score+=10;
+          total_score+=2;
         regenerateBrick.push_back(i);
         bricks[i].vanish();
         break;
@@ -795,9 +1055,9 @@ void setRandomizedMirror () {
 }
 
 void checkLevel() {
-  if(total_score>20 && total_score<60)
+  if(total_score>=3 && total_score<=6)
     level2=1;
-  else if(total_score>60){
+  else if(total_score>6){
     level3=1;
     total_mirrors=5;
   }
@@ -806,6 +1066,24 @@ void checkLevel() {
 void checkGameOver () {
   if(game_over)
     exit(0);
+}
+
+void updateScore () {
+  if((total_score/100)==0) {
+    score_board[0].create(3.5, 3.5, total_score%10);
+    score_board[1].create(3.2, 3.5, total_score/10);
+  }
+}
+
+void updateClock () {
+  if((total_time)==0) {
+    game_over=1;
+  }
+  else{
+    score_board[2].create(-3.2, 3.5, total_time%10);
+    score_board[3].create(-3.5, 3.5, total_time/10);
+    total_time--;
+  }
 }
 
 void updateGameStatus () {
@@ -817,6 +1095,7 @@ void updateGameStatus () {
   checkBulletOutOfWindow();
   checkBrickYLimit();
   checkLevel();
+  updateScore();
   setRandomizedMirror();
 }
 
@@ -1211,6 +1490,66 @@ void draw ()
     draw3DObject(mirrors[i].mirrorObj);
   }
 
+  for(i=0;i<4;i++) {
+    if(score_board[i].A) {
+      Matrices.model = glm::mat4(1.0f);
+      glm::mat4 translateA = glm::translate (glm::vec3(score_board[i].x_shift, score_board[i].y_shift, 0));
+      Matrices.model *= (translateA);
+      MVP = VP * Matrices.model;
+      glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
+      draw3DObject(score_board[i].a);
+    }
+    if(score_board[i].B) {
+      Matrices.model = glm::mat4(1.0f);
+      glm::mat4 translateB = glm::translate (glm::vec3(score_board[i].x_shift, score_board[i].y_shift, 0));
+      Matrices.model *= (translateB);
+      MVP = VP * Matrices.model;
+      glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
+      draw3DObject(score_board[i].b);
+    }
+    if(score_board[i].C) {
+      Matrices.model = glm::mat4(1.0f);
+      glm::mat4 translateC = glm::translate (glm::vec3(score_board[i].x_shift, score_board[i].y_shift, 0));
+      Matrices.model *= (translateC);
+      MVP = VP * Matrices.model;
+      glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
+      draw3DObject(score_board[i].c);
+    }
+    if(score_board[i].D) {
+      Matrices.model = glm::mat4(1.0f);
+      glm::mat4 translateD = glm::translate (glm::vec3(score_board[i].x_shift, score_board[i].y_shift, 0));
+      Matrices.model *= (translateD);
+      MVP = VP * Matrices.model;
+      glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
+      draw3DObject(score_board[i].d);
+    }
+    if(score_board[i].E) {
+      Matrices.model = glm::mat4(1.0f);
+      glm::mat4 translateE = glm::translate (glm::vec3(score_board[i].x_shift, score_board[i].y_shift, 0));
+      Matrices.model *= (translateE);
+      MVP = VP * Matrices.model;
+      glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
+      draw3DObject(score_board[i].e);
+    }
+    if(score_board[i].F) {
+      Matrices.model = glm::mat4(1.0f);
+      glm::mat4 translateF = glm::translate (glm::vec3(score_board[i].x_shift, score_board[i].y_shift, 0));
+      Matrices.model *= (translateF);
+      MVP = VP * Matrices.model;
+      glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
+      draw3DObject(score_board[i].f);
+    }
+    if(score_board[i].G) {
+      Matrices.model = glm::mat4(1.0f);
+      glm::mat4 translateG = glm::translate (glm::vec3(score_board[i].x_shift, score_board[i].y_shift, 0));
+      Matrices.model *= (translateG);
+      MVP = VP * Matrices.model;
+      glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
+      draw3DObject(score_board[i].g);
+    }
+  }
+
+
 /* TEST POINT
   Matrices.model = glm::mat4(1.0f);
   translateObject = glm::translate (glm::vec3(mirrors[0].x, mirrors[0].y, 0));
@@ -1284,6 +1623,7 @@ void initGL (GLFWwindow* window, int width, int height)
 	// Create the models
   total_bricks=0;
   total_score=0;
+  total_time=60;
   game_over=0;
   total_mirrors=4;
   total_bullets=0;
@@ -1305,6 +1645,8 @@ void initGL (GLFWwindow* window, int width, int height)
   level1=1;
   level2=0;
   level3=0;
+  updateClock();
+  updateScore();
   //testPoint();
 	
 	// Create and compile our GLSL program from the shaders
@@ -1337,9 +1679,10 @@ int main (int argc, char** argv)
 
 	initGL (window, width, height);
 
-    double last_update_time = glfwGetTime(), current_time;
+    double last_update_time = glfwGetTime(), current_time, last_game_time, current_game_time;
 
     last_update_bullet_time = glfwGetTime();
+    last_game_time = glfwGetTime();
     last_update_mirror_time = last_update_bullet_time;
 
     /* Draw in loop */
@@ -1362,6 +1705,12 @@ int main (int argc, char** argv)
         if ((current_time - last_update_time) >= 1.5) { // atleast 1.5s elapsed since last frame
             createBrick();
             last_update_time = current_time;
+        }
+
+        current_game_time = glfwGetTime(); // Time in seconds
+        if ((current_game_time - last_game_time) >= 1.5) { // atleast 1.5s elapsed since last frame
+            updateClock();
+            last_game_time = current_game_time;
         }
     }
 
