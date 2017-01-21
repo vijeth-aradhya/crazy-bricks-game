@@ -901,11 +901,11 @@ std::vector<int> regenerateBullet;
 //myvector.push_back(myint);
 //myvector.size();
 
-int total_bricks, total_score, game_over, total_bullets, total_mirrors, total_time;
+int total_bricks, total_score, game_over, total_bullets, total_mirrors, total_time, width, height;
 
 float bricks_speed, mirror_rotate_speed, mirror_trans_speed_1, mirror_trans_speed_2;
 
-double last_update_bullet_time, current_bullet_time, curr_mirror_time, last_update_mirror_time;
+double last_update_bullet_time, current_bullet_time, curr_mirror_time, last_update_mirror_time, xpos, ypos;
 
 bool level1, level2, level3, mirror_up_1, mirror_up_2;
 
@@ -1086,6 +1086,20 @@ void updateClock () {
   }
 }
 
+float getMouseCoordX (double x) {
+  return (((x+4)/width*8)-4);
+}
+
+float getMouseCoordY (double y) {
+  return (((height-y+4)/height*8)-4);
+}
+
+void updateMouseLaserAngle (float X, float Y) {
+  float midX, midY, new_angle;
+  new_angle = atan((laser.y_stick_shift - Y)/(laser.x_stick_shift - X))*180.0f/M_PI;
+  laser.rotate_angle = new_angle;
+}
+
 void updateGameStatus () {
   checkRedBasket();
   checkGreenBasket();
@@ -1096,6 +1110,7 @@ void updateGameStatus () {
   checkBrickYLimit();
   checkLevel();
   updateScore();
+  updateMouseLaserAngle(getMouseCoordX(xpos), getMouseCoordY(ypos));
   setRandomizedMirror();
 }
 
@@ -1187,8 +1202,13 @@ void mouseButton (GLFWwindow* window, int button, int action, int mods)
 {
     switch (button) {
         case GLFW_MOUSE_BUTTON_LEFT:
-            if (action == GLFW_RELEASE)
-                //triangle_rot_dir *= -1;
+            if (action == GLFW_RELEASE) {
+              current_bullet_time = glfwGetTime(); // Time in seconds
+              if ((current_bullet_time - last_update_bullet_time) >= 1.0) {
+                last_update_bullet_time = current_bullet_time;
+                shootBullet();
+              }
+            }
             break;
         case GLFW_MOUSE_BUTTON_RIGHT:
             if (action == GLFW_RELEASE) {
@@ -1239,9 +1259,9 @@ void testPoint() {
   float current_angle = 0;
   for(i=0;i<parts;i++){
       for(j=0;j<3;j++){
-          color_buffer_data_hole[i*9+j*3]=0.5;
-          color_buffer_data_hole[i*9+j*3+1]=0.5;
-          color_buffer_data_hole[i*9+j*3+2]=0.5;
+          color_buffer_data_hole[i*9+j*3]=1;
+          color_buffer_data_hole[i*9+j*3+1]=1;
+          color_buffer_data_hole[i*9+j*3+2]=1;
       }
       vertex_buffer_data_hole[i*9]=0;
       vertex_buffer_data_hole[i*9+1]=0;
@@ -1549,15 +1569,13 @@ void draw ()
     }
   }
 
-/*
   //TEST POINT
   Matrices.model = glm::mat4(1.0f);
-  translateObject = glm::translate (glm::vec3(mirrors[3].x_shift, mirrors[3].y_shift, 0));
+  translateObject = glm::translate (glm::vec3(laser.x_stick_shift, laser.y_stick_shift, 0));
   Matrices.model *= (translateObject);
   MVP = VP * Matrices.model;
   glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
   draw3DObject(testCircle);
-*/
 
   // Increment angles
   float increments = 1;
@@ -1647,7 +1665,7 @@ void initGL (GLFWwindow* window, int width, int height)
   level3=0;
   updateClock();
   updateScore();
-  //testPoint();
+  testPoint();
 	
 	// Create and compile our GLSL program from the shaders
 	programID = LoadShaders( "Sample_GL.vert", "Sample_GL.frag" );
@@ -1672,10 +1690,10 @@ void initGL (GLFWwindow* window, int width, int height)
 
 int main (int argc, char** argv)
 {
-	int width = 1000;
-	int height = 600;
+	width = 1000;
+	height = 600;
 
-    GLFWwindow* window = initGLFW(width, height);
+  GLFWwindow* window = initGLFW(width, height);
 
 	initGL (window, width, height);
 
@@ -1693,6 +1711,9 @@ int main (int argc, char** argv)
 
         // Update the game status each iter
         updateGameStatus();
+
+        // Get cursor
+        glfwGetCursorPos(window, &xpos, &ypos);
 
         // Swap Frame Buffer in double buffering
         glfwSwapBuffers(window);
