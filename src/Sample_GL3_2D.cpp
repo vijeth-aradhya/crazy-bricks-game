@@ -199,6 +199,18 @@ void draw3DObject (struct VAO* vao)
     glDrawArrays(vao->PrimitiveMode, 0, vao->NumVertices); // Starting from vertex 0; 3 vertices total -> 1 triangle
 }
 
+double xpos, ypos;
+
+int width, height;
+
+float getMouseCoordX () {
+  return (((xpos+4)/width*8)-4);
+}
+
+float getMouseCoordY () {
+  return (((height-ypos+4)/height*8)-4);
+}
+
 class Laser {
    public:
       float x;
@@ -334,16 +346,27 @@ class Basket {
       float x;
       float y;
       float x_shift;
+      float x_coord;
+      float y_coord;
+      float y_shift;
       float width;
       float length;
+      bool selected;
       string color;
       VAO *basketObj;
       VAO *mouthObj1;
       VAO *mouthObj2;
 
-      void moveLeft() {
+     void moveLeft() {
         this->x+=-0.4;
         this->x_shift+=-0.4;
+      }
+
+      void followCursor () {
+        if(this->selected) {
+          this->x = getMouseCoordX() + (this->width)/2 + this->x_coord;
+          this->x_shift = getMouseCoordX() + (this->width)/2;
+        }
       }
 
       void moveRight() {
@@ -353,17 +376,13 @@ class Basket {
 
       void create () {
 
-        float x_coord=0.6, y_coord=0.6, x_shift, y_shift=-3.4;
+        float x_coord=0.6, y_coord=0.6, x_shift=0, y_shift=0;
         int red=0, green=0, blue=0;
 
-        if(this->color == "red") {
+        if(this->color == "red")
           red=1;
-          x_shift=-1.0;
-        }
-        else {
+        else
           green=1;
-          x_shift=1.0;
-        }
 
         GLfloat vertex_buffer_data_mouth1 [] = {
           -x_coord+x_shift,-y_coord+y_shift,0, // vertex 1
@@ -385,11 +404,21 @@ class Basket {
           red-0.8,green-0.8,blue  // color 1
         };
 
+        if(this->color == "red")
+          x_shift=-1.0;
+        else
+          x_shift=1.0;
+
         this->x = x_coord+x_shift;
-        this->y = y_coord+y_shift;
-        this->x_shift = 0;
+        this->y = y_coord-3.4;
+        this->x_coord = x_coord;
+        this->y_coord = y_coord;
+        this->x_shift = x_shift;
+        this->y_shift = -3.4;
         this->length = 2*y_coord;
         this->width = 2*x_coord;
+        this->selected = 0;
+        x_shift=0;
 
         // create3DObject creates and returns a handle to a VAO that can be used later
         this->basketObj = create3DObject(GL_TRIANGLES, 6, vertex_buffer_data_mouth1, color_buffer_data_mouth1, GL_FILL);
@@ -901,11 +930,11 @@ std::vector<int> regenerateBullet;
 //myvector.push_back(myint);
 //myvector.size();
 
-int total_bricks, total_score, game_over, total_bullets, total_mirrors, total_time, width, height;
+int total_bricks, total_score, game_over, total_bullets, total_mirrors, total_time;
 
-float bricks_speed, mirror_rotate_speed, mirror_trans_speed_1, mirror_trans_speed_2;
+float bricks_speed, mirror_rotate_speed, mirror_trans_speed_1, mirror_trans_speed_2, PAN, ZOOM;
 
-double last_update_bullet_time, current_bullet_time, curr_mirror_time, last_update_mirror_time, xpos, ypos;
+double last_update_bullet_time, current_bullet_time, curr_mirror_time, last_update_mirror_time;
 
 bool level1, level2, level3, mirror_up_1, mirror_up_2;
 
@@ -1086,31 +1115,29 @@ void updateClock () {
   }
 }
 
-float getMouseCoordX (double x) {
-  return (((x+4)/width*8)-4);
-}
-
-float getMouseCoordY (double y) {
-  return (((height-y+4)/height*8)-4);
-}
-
 void updateMouseLaserAngle (float X, float Y) {
   float midX, midY, new_angle;
   new_angle = atan((laser.y_stick_shift - Y)/(laser.x_stick_shift - X))*180.0f/M_PI;
   laser.rotate_angle = new_angle;
 }
 
+void updateBasketCursor () {
+  baskets[0].followCursor();
+  baskets[1].followCursor();
+}
+
 void updateGameStatus () {
   checkRedBasket();
   checkGreenBasket();
   checkGameOver();
+  updateBasketCursor();
   checkBrickBulletCollision();
   checkMirrorBulletCollision();
   checkBulletOutOfWindow();
   checkBrickYLimit();
   checkLevel();
   updateScore();
-  updateMouseLaserAngle(getMouseCoordX(xpos), getMouseCoordY(ypos));
+  updateMouseLaserAngle(getMouseCoordX(), getMouseCoordY());
   setRandomizedMirror();
 }
 
@@ -1152,14 +1179,26 @@ void keyboard (GLFWwindow* window, int key, int scancode, int action, int mods)
             case GLFW_KEY_LEFT:
                 if(mods == GLFW_MOD_CONTROL)
                   baskets[0].moveLeft();
-                if(mods == GLFW_MOD_ALT)
+                else if(mods == GLFW_MOD_ALT)
                   baskets[1].moveLeft();
+                else
+                  PAN -= 1;
                 break;
             case GLFW_KEY_RIGHT:
                 if(mods == GLFW_MOD_CONTROL)
                   baskets[0].moveRight();
-                if(mods == GLFW_MOD_ALT)
+                else if(mods == GLFW_MOD_ALT)
                   baskets[1].moveRight();
+                else {
+                  printf("asdasd\n");
+                  PAN += 1;
+                }
+                break;
+            case GLFW_KEY_UP:
+                ZOOM += 0.2;
+                break;
+            case GLFW_KEY_DOWN:
+                ZOOM -= 0.2;
                 break;
             case GLFW_KEY_N:
                 if(bricks_speed<=0.02)
@@ -1212,7 +1251,22 @@ void mouseButton (GLFWwindow* window, int button, int action, int mods)
             break;
         case GLFW_MOUSE_BUTTON_RIGHT:
             if (action == GLFW_RELEASE) {
-                rectangle_rot_dir *= -1;
+                if(baskets[0].selected || baskets[1].selected) {
+                  if(baskets[0].selected)
+                    baskets[0].selected = 0;
+                  else if(baskets[1].selected)
+                    baskets[1].selected = 0;
+                }
+                else {
+                  if(getMouseCoordX()<baskets[0].x&&getMouseCoordX()>(baskets[0].x-baskets[0].width)&&
+                    getMouseCoordY()<baskets[0].y&&getMouseCoordY()>(baskets[0].y-baskets[0].length)) {
+                    baskets[0].selected = 1;
+                  }
+                  else if(getMouseCoordX()<baskets[1].x&&getMouseCoordX()>(baskets[1].x-baskets[1].width)&&
+                    getMouseCoordY()<baskets[1].y&&getMouseCoordY()>(baskets[1].y-baskets[1].length)) {
+                    baskets[1].selected = 1;
+                  }
+                }
             }
             break;
         default:
@@ -1244,7 +1298,7 @@ void reshapeWindow (GLFWwindow* window, int width, int height)
     // Matrices.projection = glm::perspective (fov, (GLfloat) fbwidth / (GLfloat) fbheight, 0.1f, 500.0f);
 
     // Ortho projection for 2D views
-    Matrices.projection = glm::ortho(-4.0f, 4.0f, -4.0f, 4.0f, 0.1f, 500.0f);
+    Matrices.projection = glm::ortho((-4.0f+PAN)/ZOOM, (4.0f+PAN)/ZOOM, -4.0f/ZOOM, 4.0f/ZOOM, 0.1f, 500.0f);
 }
 
 VAO *triangle, *rectangle, *testCircle;
@@ -1347,6 +1401,8 @@ void draw ()
   // Don't change unless you know what you are doing
   glUseProgram (programID);
 
+  Matrices.projection = glm::ortho((-4.0f+PAN)/ZOOM, (4.0f+PAN)/ZOOM, -4.0f/ZOOM, 4.0f/ZOOM, 0.1f, 500.0f);
+
   // Eye - Location of camera. Don't change unless you are sure!!
   glm::vec3 eye ( 5*cos(camera_rotation_angle*M_PI/180.0f), 0, 5*sin(camera_rotation_angle*M_PI/180.0f) );
   // Target - Where is the camera looking at.  Don't change unless you are sure!!
@@ -1406,21 +1462,21 @@ void draw ()
   // Draw Baskets
   for(i=0;i<2;i++) {
     Matrices.model = glm::mat4(1.0f);
-    glm::mat4 translateObject = glm::translate (glm::vec3(baskets[i].x_shift, 0, 0));
+    glm::mat4 translateObject = glm::translate (glm::vec3(baskets[i].x_shift, baskets[i].y_shift, 0));
     Matrices.model *= (translateObject);
     MVP = VP * Matrices.model;
     glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
     draw3DObject(baskets[i].basketObj);
 
     Matrices.model = glm::mat4(1.0f);
-    translateObject = glm::translate (glm::vec3(baskets[i].x_shift-(baskets[i].width/4), 0, 0));
+    translateObject = glm::translate (glm::vec3(baskets[i].x_shift-(baskets[i].width/4), baskets[i].y_shift, 0));
     Matrices.model *= (translateObject);
     MVP = VP * Matrices.model;
     glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
     draw3DObject(baskets[i].mouthObj1);
 
     Matrices.model = glm::mat4(1.0f);
-    translateObject = glm::translate (glm::vec3(baskets[i].x_shift+(baskets[i].width/4), 0, 0));
+    translateObject = glm::translate (glm::vec3(baskets[i].x_shift+(baskets[i].width/4), baskets[i].y_shift, 0));
     Matrices.model *= (translateObject);
     MVP = VP * Matrices.model;
     glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
@@ -1569,13 +1625,15 @@ void draw ()
     }
   }
 
+/*
   //TEST POINT
   Matrices.model = glm::mat4(1.0f);
-  translateObject = glm::translate (glm::vec3(laser.x_stick_shift, laser.y_stick_shift, 0));
+  translateObject = glm::translate (glm::vec3(baskets[1].x, baskets[1].y, 0));
   Matrices.model *= (translateObject);
   MVP = VP * Matrices.model;
   glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
   draw3DObject(testCircle);
+*/
 
   // Increment angles
   float increments = 1;
@@ -1663,9 +1721,11 @@ void initGL (GLFWwindow* window, int width, int height)
   level1=1;
   level2=0;
   level3=0;
+  PAN=0;
+  ZOOM=1;
   updateClock();
   updateScore();
-  testPoint();
+  //testPoint();
 	
 	// Create and compile our GLSL program from the shaders
 	programID = LoadShaders( "Sample_GL.vert", "Sample_GL.frag" );
@@ -1729,7 +1789,7 @@ int main (int argc, char** argv)
         }
 
         current_game_time = glfwGetTime(); // Time in seconds
-        if ((current_game_time - last_game_time) >= 1.5) { // atleast 1.5s elapsed since last frame
+        if ((current_game_time - last_game_time) >= 1.0) { // atleast 1.5s elapsed since last frame
             updateClock();
             last_game_time = current_game_time;
         }
